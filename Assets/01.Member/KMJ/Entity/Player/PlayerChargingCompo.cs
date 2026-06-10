@@ -5,25 +5,29 @@ namespace _Code.EntityCompo.Combat
 {
     public class PlayerChargingCompo : MonoBehaviour, IEntityComponent
     {
-        [SerializeField] private float _maxChargingTime;
-        
+        [SerializeField] private float _maxChargingTime = 3f;
+
         private bool _isCharging;
         private float _chargingSec;
-        
+
         public void Initialize(Entity entity)
         {
-            
         }
-        
+
         private void Update()
         {
-            if (_isCharging)
-                _maxChargingTime += Time.deltaTime;
+            if (_isCharging == false)
+                return;
+
+            _chargingSec += Time.deltaTime;
+
+            if (_chargingSec > _maxChargingTime)
+                _chargingSec = _maxChargingTime;
         }
 
         public void Charging()
         {
-            _maxChargingTime = 0;
+            _chargingSec = 0f;
             _isCharging = true;
         }
 
@@ -31,7 +35,7 @@ namespace _Code.EntityCompo.Combat
         {
             _isCharging = false;
 
-            return _maxChargingTime >= _chargingSec;
+            return _chargingSec >= _maxChargingTime;
         }
     }
 }
