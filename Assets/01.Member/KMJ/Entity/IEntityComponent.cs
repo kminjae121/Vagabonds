@@ -1,4 +1,4 @@
-namespace _01.Member.KMJ.Entity
+namespace _Code.EntityCompo
 {
     public interface IEntityComponent
     {

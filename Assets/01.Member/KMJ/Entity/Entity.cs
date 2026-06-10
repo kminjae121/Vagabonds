@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace _01.Member.KMJ.Entity
+namespace _Code.EntityCompo
 {
     public class Entity : MonoBehaviour
     {

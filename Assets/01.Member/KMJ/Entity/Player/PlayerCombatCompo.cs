@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace _01.Member.KMJ.Entity.Player
+namespace _Code.EntityCompo.Combat
 {
     public class PlayerCombatCompo : MonoBehaviour, IEntityComponent
     {

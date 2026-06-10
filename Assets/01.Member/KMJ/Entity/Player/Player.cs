@@ -1,4 +1,4 @@
-using _01.Member.KMJ.Entity;
+using _Code.EntityCompo;
 using UnityEngine;
 
 public class Player : Entity

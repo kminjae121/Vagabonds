@@ -1,4 +1,4 @@
-namespace _01.Member.KMJ.Command
+namespace _Code.Command
 {
     public interface ICommand
     {

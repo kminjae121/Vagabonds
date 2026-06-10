@@ -1,9 +1,9 @@
-using _01.Member.KMJ.Entity.Player;
+using _Code.EntityCompo.Combat;
+using _Code.EntityCompo.Move;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using PlayerInput = _00.CORE._02.Scripts.Input.PlayerInput;
 
-namespace _01.Member.KMJ.Command
+namespace _Code.Command
 {
     public class PlayerCommandBinder : MonoBehaviour
     {
@@ -19,6 +19,7 @@ namespace _01.Member.KMJ.Command
         {
             moveCommand = new MoveCommand(movement);
             jumpCommand = new JumpCommand(movement);
+            attackCommand = new AttackCommand(combat);
         }
 
         private void OnEnable()
