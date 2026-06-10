@@ -1,9 +1,9 @@
-using _01.Member.KMJ.Entity.Player;
+using _Code.EntityCompo.Move;
 using UnityEngine;
 
-namespace _01.Member.KMJ.Command
+namespace _Code.Command
 {
-    public class JumpCommand : MonoBehaviour
+    public class JumpCommand : MonoBehaviour, ICommand
     {
         private readonly PlayerMoveCompo movement;
 

@@ -1,11 +1,17 @@
-using System;
 using UnityEngine;
 
-namespace _01.Member.KMJ.Entity.Player
+namespace _Code.EntityCompo.Move
 {
     public class PlayerMoveCompo : MonoBehaviour, IEntityComponent
     {
-        [SerializeField] private float _moveSpeed;
+        [Header("Move")]
+        [SerializeField] private float _moveSpeed = 5f;
+
+        [Header("Jump")]
+        [SerializeField] private float _jumpPower = 5f;
+        [SerializeField] private LayerMask _groundLayer;
+        [SerializeField] private float _groundCheckDistance = 0.2f;
+
         private Rigidbody _rbCompo;
         private Entity _entity;
         private Vector3 _moveDir;
@@ -23,8 +29,7 @@ namespace _01.Member.KMJ.Entity.Player
             _moveDir.Normalize();
         }
 
-        public float GetMoveSpeed()
-            => _moveSpeed;
+        public float GetMoveSpeed() => _moveSpeed;
 
         public void SetMoveSpeed(float moveSpeed)
             => _moveSpeed = moveSpeed;
@@ -42,7 +47,23 @@ namespace _01.Member.KMJ.Entity.Player
 
         public void Jump()
         {
-            
+            if (!IsGrounded())
+                return;
+
+            Vector3 velocity = _rbCompo.linearVelocity;
+            velocity.y = _jumpPower;
+
+            _rbCompo.linearVelocity = velocity;
+        }
+
+        private bool IsGrounded()
+        {
+            return Physics.Raycast(
+                _entity.transform.position,
+                Vector3.down,
+                _groundCheckDistance,
+                _groundLayer
+            );
         }
     }
 }
