@@ -50,10 +50,7 @@ namespace _Code.EntityCompo.Move
             if (!IsGrounded())
                 return;
 
-            Vector3 velocity = _rbCompo.linearVelocity;
-            velocity.y = _jumpPower;
-
-            _rbCompo.linearVelocity = velocity;
+            _rbCompo.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
         }
 
         private bool IsGrounded()
