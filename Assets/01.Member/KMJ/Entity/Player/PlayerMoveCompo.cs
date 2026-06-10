@@ -36,6 +36,9 @@ namespace _Code.EntityCompo.Move
 
         private void FixedUpdate()
         {
+            if (_moveDir != Vector3.zero)
+                return;
+            
             Vector3 worldDir = _entity.transform.TransformDirection(_moveDir);
 
             _rbCompo.linearVelocity = new Vector3(
