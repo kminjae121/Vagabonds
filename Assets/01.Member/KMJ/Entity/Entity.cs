@@ -9,6 +9,8 @@ namespace _01.Member.KMJ.Entity
     {
         protected Dictionary<Type, IEntityComponent> _components = new();
 
+        protected Dictionary<Type, Component> _casingComponents = new();
+
         protected virtual void Awake()
         {
             AddComponent();
