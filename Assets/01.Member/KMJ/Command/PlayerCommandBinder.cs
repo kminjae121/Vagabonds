@@ -1,9 +1,9 @@
-using _01.Member.KMJ.Entity.Player;
+using _Code.EntityCompo.Combat;
+using _Code.EntityCompo.Move;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using PlayerInput = _00.CORE._02.Scripts.Input.PlayerInput;
 
-namespace _01.Member.KMJ.Command
+namespace _Code.Command
 {
     public class PlayerCommandBinder : MonoBehaviour
     {
@@ -11,26 +11,31 @@ namespace _01.Member.KMJ.Command
         [SerializeField] private PlayerMoveCompo movement;
         [SerializeField] private PlayerCombatCompo combat;
 
-        private MoveCommand moveCommand;
-        private JumpCommand jumpCommand;
-        private AttackCommand attackCommand;
+        private MoveCommand _moveCommand;
+        private JumpCommand _jumpCommand;
+        private AttackCommand _attackCommand;
 
         private void Awake()
         {
-            moveCommand = new MoveCommand(movement);
-            jumpCommand = new JumpCommand(movement);
+            _moveCommand = new MoveCommand(movement);
+            _jumpCommand = new JumpCommand(movement);
+            _attackCommand = new AttackCommand(combat);
         }
 
         private void OnEnable()
         {
-            inputReader.MoveEvent += moveCommand.Execute;
-            inputReader.JumpKeyEvent += jumpCommand.Execute;
+            inputReader.MoveEvent += _moveCommand.Execute;
+            inputReader.JumpKeyEvent += _jumpCommand.Execute;
+            inputReader.ChargingEvent += _attackCommand.Execute;
+            inputReader.ChargingAttackEvent += _attackCommand.ExecuteEnd;
         }
 
         private void OnDisable()
         {
-            inputReader.MoveEvent -= moveCommand.Execute;
-            inputReader.JumpKeyEvent -= jumpCommand.Execute;
+            inputReader.MoveEvent -= _moveCommand.Execute;
+            inputReader.JumpKeyEvent -= _jumpCommand.Execute;
+            inputReader.ChargingEvent -= _attackCommand.Execute;
+            inputReader.ChargingAttackEvent -= _attackCommand.ExecuteEnd;
         }
     }
 }

@@ -1,11 +1,17 @@
-using System;
 using UnityEngine;
 
-namespace _01.Member.KMJ.Entity.Player
+namespace _Code.EntityCompo.Move
 {
     public class PlayerMoveCompo : MonoBehaviour, IEntityComponent
     {
-        [SerializeField] private float _moveSpeed;
+        [Header("Move")]
+        [SerializeField] private float _moveSpeed = 5f;
+
+        [Header("Jump")]
+        [SerializeField] private float _jumpPower = 5f;
+        [SerializeField] private LayerMask _groundLayer;
+        [SerializeField] private float _groundCheckDistance = 0.2f;
+
         private Rigidbody _rbCompo;
         private Entity _entity;
         private Vector3 _moveDir;
@@ -23,14 +29,18 @@ namespace _01.Member.KMJ.Entity.Player
             _moveDir.Normalize();
         }
 
-        public float GetMoveSpeed()
-            => _moveSpeed;
+        public float GetMoveSpeed() => _moveSpeed;
 
         public void SetMoveSpeed(float moveSpeed)
             => _moveSpeed = moveSpeed;
 
+        public void GravityZero() => _rbCompo.useGravity = false;
+
         private void FixedUpdate()
         {
+            if (_moveDir != Vector3.zero)
+                return;
+            
             Vector3 worldDir = _entity.transform.TransformDirection(_moveDir);
 
             _rbCompo.linearVelocity = new Vector3(
@@ -42,7 +52,20 @@ namespace _01.Member.KMJ.Entity.Player
 
         public void Jump()
         {
-            
+            if (!IsGrounded())
+                return;
+
+            _rbCompo.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
+        }
+
+        private bool IsGrounded()
+        {
+            return Physics.Raycast(
+                _entity.transform.position,
+                Vector3.down,
+                _groundCheckDistance,
+                _groundLayer
+            );
         }
     }
 }
