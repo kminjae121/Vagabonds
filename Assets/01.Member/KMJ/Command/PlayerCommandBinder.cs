@@ -11,27 +11,31 @@ namespace _Code.Command
         [SerializeField] private PlayerMoveCompo movement;
         [SerializeField] private PlayerCombatCompo combat;
 
-        private MoveCommand moveCommand;
-        private JumpCommand jumpCommand;
-        private AttackCommand attackCommand;
+        private MoveCommand _moveCommand;
+        private JumpCommand _jumpCommand;
+        private AttackCommand _attackCommand;
 
         private void Awake()
         {
-            moveCommand = new MoveCommand(movement);
-            jumpCommand = new JumpCommand(movement);
-            attackCommand = new AttackCommand(combat);
+            _moveCommand = new MoveCommand(movement);
+            _jumpCommand = new JumpCommand(movement);
+            _attackCommand = new AttackCommand(combat);
         }
 
         private void OnEnable()
         {
-            inputReader.MoveEvent += moveCommand.Execute;
-            inputReader.JumpKeyEvent += jumpCommand.Execute;
+            inputReader.MoveEvent += _moveCommand.Execute;
+            inputReader.JumpKeyEvent += _jumpCommand.Execute;
+            inputReader.ChargingEvent += _attackCommand.Execute;
+            inputReader.ChargingAttackEvent += _attackCommand.ExecuteEnd;
         }
 
         private void OnDisable()
         {
-            inputReader.MoveEvent -= moveCommand.Execute;
-            inputReader.JumpKeyEvent -= jumpCommand.Execute;
+            inputReader.MoveEvent -= _moveCommand.Execute;
+            inputReader.JumpKeyEvent -= _jumpCommand.Execute;
+            inputReader.ChargingEvent -= _attackCommand.Execute;
+            inputReader.ChargingAttackEvent -= _attackCommand.ExecuteEnd;
         }
     }
 }
