@@ -1,11 +1,10 @@
 using _Code.EntityCompo.Combat;
-using UnityEngine;
 
 namespace _Code.Command
 {
-    public class AttackCommand : MonoBehaviour, ICommand
+    public class AttackCommand : ICommand
     {
-        private PlayerCombatCompo _combatCompo;
+        private readonly PlayerCombatCompo _combatCompo;
 
         public AttackCommand(PlayerCombatCompo combatCompo)
         {
@@ -14,12 +13,12 @@ namespace _Code.Command
 
         public void Execute()
         {
-            _combatCompo.ChargingCompo.Charging();
+            _combatCompo.ChargingCompo?.Charging();
         }
 
         public void ExecuteEnd()
         {
-            _combatCompo.ForceAttack();
+            _combatCompo?.ForceAttack();
         }
     }
 }

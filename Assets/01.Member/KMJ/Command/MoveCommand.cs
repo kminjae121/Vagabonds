@@ -3,18 +3,18 @@ using UnityEngine;
 
 namespace _Code.Command
 {
-    public class MoveCommand : MonoBehaviour, ICommand<Vector2>
+    public class MoveCommand : ICommand<Vector2>
     {
-        private readonly PlayerMoveCompo movement;
+        private readonly PlayerMoveCompo _movement;
 
         public MoveCommand(PlayerMoveCompo movement)
         {
-            this.movement = movement;
+            _movement = movement;
         }
 
         public void Execute(Vector2 direction)
         {
-            movement.SetMove(direction);
+            _movement.SetMove(direction);
         }
     }
 }
