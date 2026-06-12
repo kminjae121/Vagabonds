@@ -38,8 +38,11 @@ namespace _Code.EntityCompo.Move
 
         private void FixedUpdate()
         {
-            if (_moveDir != Vector3.zero)
+            if (_moveDir == Vector3.zero && _rbCompo.linearVelocity != Vector3.zero)
+            {
+                _rbCompo.linearVelocity = Vector3.zero;
                 return;
+            }
             
             Vector3 worldDir = _entity.transform.TransformDirection(_moveDir);
 

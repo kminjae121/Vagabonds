@@ -5,6 +5,7 @@ namespace _Code.EntityCompo.Combat
 {
     public class PlayerChargingCompo : MonoBehaviour, IEntityComponent
     {
+        [SerializeField] private PlayerAutoAimmingCompo aimmingCompo;
         [SerializeField] private float _maxChargingTime = 3f;
 
         private bool _isCharging;
@@ -19,6 +20,8 @@ namespace _Code.EntityCompo.Combat
             if (_isCharging == false)
                 return;
 
+            aimmingCompo.ShootRayForCheckEnemy();
+            
             _chargingSec += Time.deltaTime;
 
             if (_chargingSec > _maxChargingTime)
@@ -37,5 +40,7 @@ namespace _Code.EntityCompo.Combat
 
             return _chargingSec >= _maxChargingTime;
         }
+
+        public GameObject GetEnemyObject() => aimmingCompo.aimingObject;
     }
 }

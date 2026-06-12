@@ -13,10 +13,25 @@ namespace _Code.EntityCompo.Combat
 
         public void ForceAttack()
         {
+            if (ChargingCompo.GetEnemyObject())
+            {
+                GuidedAttack(ChargingCompo.GetEnemyObject());
+            }
+            
             if (ChargingCompo.EndCharging())
             {
-                Debug.Log("발도술!!!");
+                Debug.Log("발도술");    
             }
+        }
+
+        private void GuidedAttack(GameObject enemy)
+        {
+                
+        }
+
+        private void DashAttack()
+        {
+            
         }
     }
 }

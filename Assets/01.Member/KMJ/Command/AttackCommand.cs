@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace _Code.Command
 {
-    public class AttackCommand : MonoBehaviour, ICommand
+    public class AttackCommand : ICommand
     {
         private PlayerCombatCompo _combatCompo;
 
@@ -22,4 +22,4 @@ namespace _Code.Command
             _combatCompo.ForceAttack();
         }
     }
-}
+}   

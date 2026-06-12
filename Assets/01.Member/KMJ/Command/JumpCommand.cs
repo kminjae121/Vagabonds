@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace _Code.Command
 {
-    public class JumpCommand : MonoBehaviour, ICommand
+    public class JumpCommand : ICommand
     {
         private readonly PlayerMoveCompo movement;
 

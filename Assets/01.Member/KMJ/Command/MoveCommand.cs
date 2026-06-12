@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace _Code.Command
 {
-    public class MoveCommand : MonoBehaviour, ICommand<Vector2>
+    public class MoveCommand : ICommand<Vector2>
     {
         private readonly PlayerMoveCompo movement;
 
