@@ -1,20 +1,19 @@
 using _Code.EntityCompo.Move;
-using UnityEngine;
 
 namespace _Code.Command
 {
     public class JumpCommand : ICommand
     {
-        private readonly PlayerMoveCompo movement;
+        private readonly PlayerMoveCompo _movement;
 
         public JumpCommand(PlayerMoveCompo movement)
         {
-            this.movement = movement;
+            _movement = movement;
         }
 
         public void Execute()
         {
-            movement.Jump();
+            _movement.Jump();
         }
     }
 }

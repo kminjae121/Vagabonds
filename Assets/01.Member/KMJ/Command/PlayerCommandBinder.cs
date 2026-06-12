@@ -24,14 +24,30 @@ namespace _Code.Command
 
         private void OnEnable()
         {
+            if (inputReader == null)
+            {
+                Debug.LogError($"{nameof(PlayerCommandBinder)} requires a PlayerInput asset.", this);
+                enabled = false;
+                return;
+            }
+
             inputReader.MoveEvent += _moveCommand.Execute;
             inputReader.JumpKeyEvent += _jumpCommand.Execute;
             inputReader.ChargingEvent += _attackCommand.Execute;
             inputReader.ChargingAttackEvent += _attackCommand.ExecuteEnd;
         }
 
+        private void Update()
+        {
+            if (inputReader != null && movement != null)
+                movement.SetJumpHeld(inputReader.IsJumpPressed());
+        }
+
         private void OnDisable()
         {
+            if (inputReader == null)
+                return;
+
             inputReader.MoveEvent -= _moveCommand.Execute;
             inputReader.JumpKeyEvent -= _jumpCommand.Execute;
             inputReader.ChargingEvent -= _attackCommand.Execute;
