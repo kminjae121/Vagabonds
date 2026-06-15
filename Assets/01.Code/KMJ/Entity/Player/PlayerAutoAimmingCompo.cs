@@ -1,3 +1,4 @@
+using System;
 using _Code.EntityCompo.Enemy;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,7 +21,7 @@ namespace _Code.EntityCompo.Combat
         private float currentAimmingTime = 0f;
         [field: SerializeField] public GameObject aimingObject { get; set; }
 
-        private EnemyAimUI _aimUI;
+        [SerializeField] private EnemyAimUI _aimUI;
         private Transform defaultTarget;
         private bool isLockedOn = false;
         
@@ -30,19 +31,18 @@ namespace _Code.EntityCompo.Combat
         public void Initialize(Entity entity)
         {
             _player = entity as Player;
-            _aimUI = aimUI.GetComponent<EnemyAimUI>();
         }
 
-        public void ShootRayForCheckEnemy()
+        public void ShootRayForCheckEnemy(bool isCharging)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             
-            if (Physics.SphereCast(ray, sphereRadius, out hit, maxDistance, whatIsEnemy))
+            if (Physics.SphereCast(ray, sphereRadius, out hit, maxDistance, whatIsEnemy) && isCharging)
             {
                 if (hit.transform.gameObject != null)
                 {
-                    uiImage.color = Color.white;
+                    uiImage.color = Color.red;
                     SetUIActive(true);
                     CheckIsTimeOver(hit);
                 }
@@ -52,7 +52,7 @@ namespace _Code.EntityCompo.Combat
                 if (aimingObject.TryGetComponent(out EnemyAimed aimed))
                 {
                     SetUIActive(false);
-                    uiImage.color = Color.white;
+                    uiImage.color = Color.red;
                     uiImage.sprite = baseImage;
                     SetEnemyNull();
                     aimed.StartCoroutineInScript();
@@ -60,7 +60,7 @@ namespace _Code.EntityCompo.Combat
             }
             else
             {
-                uiImage.color = Color.white;
+                uiImage.color = Color.black;
                 uiImage.sprite = baseImage;
                 SetUIActive(false);
             }

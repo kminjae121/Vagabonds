@@ -21,7 +21,7 @@ namespace Code.Core.Stats
 
         public StatSO GetStat(StatSO stat)
         {
-            Debug.Assert(stat != null, $"Stat: GetStat - stat can not be null");
+            Debug.Assert(stat != null, $"Stat: GetStat - stat can not be null {stat.statName}");
             return _stats.GetValueOrDefault(stat.statName);
         }
 

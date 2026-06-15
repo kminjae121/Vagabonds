@@ -60,12 +60,12 @@ Material:
     - _Alpha: 1
     - _Enabled: 0
     - _Mask_Contrast: 1
-    - _Mask_Size: 2
-    - _Smoothness: 4
+    - _Mask_Size: 1.2
+    - _Smoothness: 2.37
     - _Speed: 1
     - _enabled: 1
     m_Colors:
-    - _Color: {r: 2, g: 2, b: 2, a: 1}
+    - _Color: {r: 2.2335274, g: 2.2335274, b: 2.2335274, a: 1}
     - _Tiling: {r: 3, g: 9, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

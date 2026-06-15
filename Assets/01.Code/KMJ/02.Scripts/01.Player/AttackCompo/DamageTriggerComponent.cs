@@ -1,4 +1,5 @@
-﻿using _01.Member.KMJ._00.Core._01.Entity._02.EntityCompo;
+﻿using System;
+using _01.Member.KMJ._00.Core._01.Entity._02.EntityCompo;
 using _Code.EntityCompo;
 using Code.Core.Stats;
 using UnityEngine;
@@ -19,26 +20,41 @@ namespace _01.Member.KMJ._02.Scripts._01.Player.AttackCompo
         [SerializeField] private  StatSO atkDamageStat;
 
         [SerializeField] private EntityStatCompo statCompo;
-
-        [SerializeField] private DamageType _damageType;
             
         private float _atkDamage;
 
         private Entity _owner;
-        
-        private DamageData damageData;
+
+        private DamageData damageData = new();
 
         private Collider _thisCollider;
+
+        private GameObject _target;
+        
         public void Initialize(Entity entity)
         {
-            damageData.damage = statCompo.GetStat(atkDamageStat).Value;
-            damageData.damageType = _damageType;
+            _owner = entity;
             _thisCollider = GetComponent<Collider>();
         }
 
-        public void StartTrigger()
+        private void Start()
+        {
+            damageData.damage = statCompo.GetStat(atkDamageStat).Value;
+        }
+
+        public void StartTrigger(GameObject target)
         {
             _thisCollider.enabled = true;
+
+            SetTarget(target);
+        }
+
+        private void SetTarget(GameObject target)
+        {
+            if (target == null)
+                _target = null;
+            else
+                _target = target;
         }
 
         public void EndTrigger()
@@ -46,11 +62,22 @@ namespace _01.Member.KMJ._02.Scripts._01.Player.AttackCompo
             _thisCollider.enabled = false;
         }
 
+        public void GiveDamageForTarget(GameObject target)
+        {
+            SetTarget(target);
+            
+            if (_target.TryGetComponent(out IDamageable damageable))                 
+            {
+                damageable.ApplyDamage(damageData, _target.transform.position, _owner.transform.forward, weaponAtkData,
+                    _owner);
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (((1 << other.gameObject.layer) & whatIsEnemy) != 0)
             {
-                if (other.TryGetComponent(out IDamageable damageable))
+                if (other.TryGetComponent(out IDamageable damageable))                 
                 {
                     damageable.ApplyDamage(damageData, other.transform.position, _owner.transform.forward, weaponAtkData,
                         _owner);

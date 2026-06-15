@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Code.Interfaces;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -21,6 +22,7 @@ namespace _Code.EntityCompo
         {
             AddComponent();
             InitUnitComponents();
+            AfterInitializeComponents();
         }
 
         private void AddComponent()
@@ -30,6 +32,12 @@ namespace _Code.EntityCompo
         }
         public IEntityComponent GetCompo(Type type)
             => _components.GetValueOrDefault(type);
+
+        private void AfterInitializeComponents()
+        {
+            _components.Values.OfType<IAfterInitialize>()
+                .ToList().ForEach(component => component.AfterInitialize());
+        }
 
         private void InitUnitComponents()
         {

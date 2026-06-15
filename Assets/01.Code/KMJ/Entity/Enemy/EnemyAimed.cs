@@ -16,17 +16,17 @@ namespace _Code.EntityCompo.Enemy
 
 
         public float aimmingTime = 0;
-        private float _maxAimmingTime = 0.2f;
+        private float _maxAimmingTime = 0.5f;
         
         private void Update()
         {
             if (isAimmed)
             {
-                OnAimmedThis?.Invoke();
                 aimmingTime += Time.deltaTime;
 
                 if (aimmingTime >= _maxAimmingTime)
                 {
+                    OnAimmedThis?.Invoke();
                     aimmingTime = _maxAimmingTime;
                     isTarget = true;
                 }
@@ -36,6 +36,8 @@ namespace _Code.EntityCompo.Enemy
         public void AimmingThis()
         {
             isAimmed = true;
+            
+            Debug.Log("에임 활설화");
         }
 
         public void StartCoroutineInScript()

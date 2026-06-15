@@ -22,8 +22,6 @@ namespace Code.Entities
         public delegate void OnHealthChanged(float current, float max);
 
         public event OnHealthChanged OnHealthChangedEvent;
-
-        [SerializeField] private BloodFlowerSystem _bloodFlowerSystem = null;
             
         public UnityEvent OnMinusHealthEvent;
         
@@ -40,23 +38,7 @@ namespace Code.Entities
         
         public void AfterInitialize()
         {
-            maxHealth = currentHealth = _statCompo.SubscribeStat(
-                hpStat, HandleMaxHPChanged, 10f);
-        }
-
-        private void OnDestroy()
-        {
-            _statCompo.UnSubscribeStat(hpStat, HandleMaxHPChanged);
-        }
-
-        private void HandleMaxHPChanged(StatSO stat, float currentValue, float previousValue)
-        {
-            float changed = currentValue - previousValue; //얼마만큼 변했는지를 측정
-            maxHealth = currentValue;
-            
-            currentHealth = changed > 0 ?
-                Mathf.Clamp(currentHealth + changed, 0, maxHealth) 
-                : Mathf.Clamp(currentHealth, 0, maxHealth);
+            maxHealth = currentHealth = _statCompo.GetStat(hpStat).Value;
         }
 
         public void ApplyDamage(DamageData damageData, Vector3 hitPoint, Vector3 hitNormal, AttackDataSO attackData, Entity dealer)
@@ -72,22 +54,12 @@ namespace Code.Entities
             currentHealth = Mathf.Clamp(currentHealth - damageData.damage, 0, maxHealth);
 
             OnHealthChangedEvent?.Invoke(currentHealth, maxHealth);
-
             
             if (currentHealth <= 0)
                 _entity.OnDeathEvent?.Invoke();
 
             OnMinusHealthEvent?.Invoke();
             _entity.OnHitEvent?.Invoke();
-            
-            if (_bloodFlowerSystem != null)
-            {
-                _bloodFlowerSystem.GetDamage(damageData.damage);
-            }
-            else
-            {
-                return;
-            }
         }
     }
 }
