@@ -14,6 +14,9 @@ namespace _Code.MovementTest
         [SerializeField] private bool _disableLegacyRunway = true;
         [SerializeField] private Texture2D _prototypeTexture;
         [SerializeField, Min(0.01f)] private float _textureTilesPerMeter = 0.25f;
+        [SerializeField] private bool _useLowFrictionCourseColliders = true;
+        [SerializeField] private bool _useSingleRunwayFloorCollision = true;
+        [SerializeField] private bool _disableGuideMarkerCollision = true;
         [SerializeField] private Vector3 _startPosition = new(0f, 1.05f, 0f);
         [SerializeField] private Vector3 _finishPosition = new(0f, 2f, 260f);
         [SerializeField] private float _startSpeedThreshold = 1f;
@@ -31,6 +34,7 @@ namespace _Code.MovementTest
         private int _speedSampleCount;
         private bool _hasStarted;
         private bool _isFinished;
+        private PhysicsMaterial _coursePhysicsMaterial;
 
         public bool HasStarted => _hasStarted;
         public bool IsFinished => _isFinished;
@@ -100,6 +104,7 @@ namespace _Code.MovementTest
             }
 
             _movement.ClearBloodStacks();
+            _movement.ResetMovementStats();
             ResetRunState();
         }
 
@@ -183,32 +188,32 @@ namespace _Code.MovementTest
             _generatedRoot.SetParent(transform, false);
 
             CreateBlock("Main Practice Floor", new Vector3(0f, -0.16f, 130f), new Vector3(70f, 0.2f, 290f));
-            CreateBlock("Start Pad", new Vector3(0f, -0.08f, 0f), new Vector3(18f, 0.24f, 16f));
-            CreateBlock("Wide Acceleration Field", new Vector3(0f, -0.06f, 28f), new Vector3(34f, 0.24f, 40f));
+            CreateBlock("Start Pad", new Vector3(0f, -0.08f, 0f), new Vector3(18f, 0.24f, 16f), !_useSingleRunwayFloorCollision);
+            CreateBlock("Wide Acceleration Field", new Vector3(0f, -0.06f, 28f), new Vector3(34f, 0.24f, 40f), !_useSingleRunwayFloorCollision);
 
-            CreateBlock("Bunnyhop Practice Lane", new Vector3(0f, -0.04f, 76f), new Vector3(26f, 0.24f, 42f));
+            CreateBlock("Bunnyhop Practice Lane", new Vector3(0f, -0.04f, 76f), new Vector3(26f, 0.24f, 42f), !_useSingleRunwayFloorCollision);
             for (int i = 0; i < 5; i++)
             {
                 float x = i % 2 == 0 ? -8f : 8f;
                 float z = 58f + i * 9f;
-                CreateBlock($"Optional Bunnyhop Marker {i + 1}", new Vector3(x, 0.02f, z), new Vector3(8f, 0.12f, 3f));
+                CreateBlock($"Optional Bunnyhop Marker {i + 1}", new Vector3(x, 0.02f, z), new Vector3(8f, 0.12f, 3f), !_disableGuideMarkerCollision);
             }
 
-            CreateBlock("Open Steering Field", new Vector3(4f, -0.04f, 132f), new Vector3(52f, 0.24f, 58f));
-            CreateBlock("Soft Curve Guide A", new Vector3(-16f, 0.04f, 112f), new Vector3(8f, 0.18f, 8f));
-            CreateBlock("Soft Curve Guide B", new Vector3(18f, 0.04f, 132f), new Vector3(8f, 0.18f, 8f));
-            CreateBlock("Soft Curve Guide C", new Vector3(-12f, 0.04f, 152f), new Vector3(8f, 0.18f, 8f));
+            CreateBlock("Open Steering Field", new Vector3(4f, -0.04f, 132f), new Vector3(52f, 0.24f, 58f), !_useSingleRunwayFloorCollision);
+            CreateBlock("Soft Curve Guide A", new Vector3(-16f, 0.04f, 112f), new Vector3(8f, 0.18f, 8f), !_disableGuideMarkerCollision);
+            CreateBlock("Soft Curve Guide B", new Vector3(18f, 0.04f, 132f), new Vector3(8f, 0.18f, 8f), !_disableGuideMarkerCollision);
+            CreateBlock("Soft Curve Guide C", new Vector3(-12f, 0.04f, 152f), new Vector3(8f, 0.18f, 8f), !_disableGuideMarkerCollision);
 
-            CreateBlock("Left Wall Kick Practice Floor", new Vector3(-14f, -0.03f, 190f), new Vector3(28f, 0.24f, 42f));
-            CreateBlock("Left Wall Kick Surface", new Vector3(-28f, 2f, 190f), new Vector3(0.35f, 4.2f, 42f));
-            CreateBlock("Left Wall Kick Landing Field", new Vector3(4f, -0.02f, 198f), new Vector3(34f, 0.24f, 36f));
+            CreateBlock("Left Wall Kick Practice Floor", new Vector3(-14f, -0.03f, 190f), new Vector3(28f, 0.24f, 42f), !_useSingleRunwayFloorCollision);
+            CreateBlock("Left Wall Kick Surface", new Vector3(-28f, 15f, 190f), new Vector3(0.35f, 30f, 42f));
+            CreateBlock("Left Wall Kick Landing Field", new Vector3(4f, -0.02f, 198f), new Vector3(34f, 0.24f, 36f), !_useSingleRunwayFloorCollision);
 
-            CreateBlock("Right Wall Kick Practice Floor", new Vector3(14f, -0.03f, 226f), new Vector3(28f, 0.24f, 42f));
-            CreateBlock("Right Wall Kick Surface", new Vector3(28f, 2f, 226f), new Vector3(0.35f, 4.2f, 42f));
-            CreateBlock("Right Wall Kick Landing Field", new Vector3(-4f, -0.02f, 234f), new Vector3(34f, 0.24f, 36f));
+            CreateBlock("Right Wall Kick Practice Floor", new Vector3(14f, -0.03f, 226f), new Vector3(28f, 0.24f, 42f), !_useSingleRunwayFloorCollision);
+            CreateBlock("Right Wall Kick Surface", new Vector3(28f, 15f, 226f), new Vector3(0.35f, 30f, 42f));
+            CreateBlock("Right Wall Kick Landing Field", new Vector3(-4f, -0.02f, 234f), new Vector3(34f, 0.24f, 36f), !_useSingleRunwayFloorCollision);
 
-            CreateBlock("Free Combo Yard", new Vector3(0f, -0.01f, 252f), new Vector3(60f, 0.24f, 30f));
-            CreateBlock("Finish Landing", new Vector3(0f, 0f, 260f), new Vector3(26f, 0.28f, 18f));
+            CreateBlock("Free Combo Yard", new Vector3(0f, -0.01f, 252f), new Vector3(60f, 0.24f, 30f), !_useSingleRunwayFloorCollision);
+            CreateBlock("Finish Landing", new Vector3(0f, 0f, 260f), new Vector3(26f, 0.28f, 18f), !_useSingleRunwayFloorCollision);
             CreateFinishTrigger();
         }
 
@@ -219,7 +224,7 @@ namespace _Code.MovementTest
                 legacyRunway.SetActive(false);
         }
 
-        private void CreateBlock(string blockName, Vector3 position, Vector3 scale)
+        private void CreateBlock(string blockName, Vector3 position, Vector3 scale, bool solid = true)
         {
             GameObject block = GameObject.CreatePrimitive(PrimitiveType.Cube);
             block.name = blockName;
@@ -229,6 +234,9 @@ namespace _Code.MovementTest
 
             if (block.TryGetComponent(out MeshRenderer renderer))
                 renderer.sharedMaterial = CreatePrototypeMaterial(blockName, scale);
+
+            if (block.TryGetComponent(out Collider blockCollider))
+                ConfigureCourseCollider(blockCollider, solid);
         }
 
         private void CreateFinishTrigger()
@@ -243,7 +251,10 @@ namespace _Code.MovementTest
                 renderer.sharedMaterial = CreatePrototypeMaterial("Finish Trigger", trigger.transform.localScale);
 
             if (trigger.TryGetComponent(out Collider triggerCollider))
+            {
+                ConfigureCourseCollider(triggerCollider, true);
                 triggerCollider.isTrigger = true;
+            }
 
             MovementTestFinishTrigger finishTrigger = trigger.AddComponent<MovementTestFinishTrigger>();
             finishTrigger.Initialize(this);
@@ -289,6 +300,36 @@ namespace _Code.MovementTest
             return new Vector2(
                 Mathf.Max(1f, Mathf.Abs(scale.x) * _textureTilesPerMeter),
                 Mathf.Max(1f, Mathf.Abs(scale.z) * _textureTilesPerMeter));
+        }
+
+        private void ConfigureCourseCollider(Collider targetCollider, bool solid)
+        {
+            if (!solid)
+            {
+                targetCollider.enabled = false;
+                return;
+            }
+
+            if (_useLowFrictionCourseColliders)
+                targetCollider.sharedMaterial = GetCoursePhysicsMaterial();
+        }
+
+        private PhysicsMaterial GetCoursePhysicsMaterial()
+        {
+            if (_coursePhysicsMaterial != null)
+                return _coursePhysicsMaterial;
+
+            _coursePhysicsMaterial = new PhysicsMaterial("MovementTest Low Friction")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+                hideFlags = HideFlags.DontSave
+            };
+
+            return _coursePhysicsMaterial;
         }
 
         private static Vector3 Flatten(Vector3 value)

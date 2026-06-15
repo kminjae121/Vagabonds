@@ -9,7 +9,7 @@ namespace _Code.MovementTest
         [SerializeField] private PlayerMoveCompo _movement;
         [SerializeField] private MovementTestCourseController _course;
         [SerializeField] private bool _enableDebugShortcuts = true;
-        [SerializeField] private Rect _rect = new(16f, 16f, 500f, 360f);
+        [SerializeField] private Rect _rect = new(16f, 16f, 540f, 420f);
 
         private GUIStyle _style;
 
@@ -78,12 +78,22 @@ namespace _Code.MovementTest
                    $"Base: {_movement.EffectiveMaxSpeed:00.00} / Cap: {_movement.CurrentSpeedCap:00.00}\n" +
                    $"Blood: {_movement.BloodStacks} ({_movement.BloodSpeedMultiplier:0.00}x)\n" +
                    $"Combat Boost: {_movement.CombatMomentumRemainingTime:0.00}s\n" +
-                   $"Wall Kick: {(_movement.IsWallKickReady ? "Ready" : "--")} / Grace: {_movement.WallKickGraceRemainingTime:0.00}s / Count: {_movement.AirWallKickCount}\n" +
-                   $"Last Hop: {_movement.LastConsumedHopMode} / Grounded: {_movement.IsGrounded}\n" +
+                   $"Wall Ride: {(_movement.IsWallRiding ? "On" : "--")} / Enter: {_movement.WallRideEnterCount} / Kick: {GetWallKickText()} / Count: {_movement.AirWallKickCount}\n" +
+                   $"Wall Return Damping: {_movement.WallKickReturnDampingRemainingTime:0.00}s\n" +
+                   $"Last Hop: {_movement.LastConsumedHopMode} / Timed: {_movement.TimedHopCount} / Auto: {_movement.AutoRepeatHopCount}\n" +
+                   $"Grounded: {_movement.IsGrounded}\n" +
                    $"Mouse: look / WASD: move\n" +
-                   $"Space tap: timed / hold: auto\n" +
+                   $"Space tap: timed or wall kick / hold: auto\n" +
                    $"K: impulse / B: blood +1 / N: clear\n" +
                    $"R: reset course / Esc: cursor";
+        }
+
+        private string GetWallKickText()
+        {
+            if (_movement.WallKickFeedbackRemainingTime > 0f)
+                return "KICK!";
+
+            return _movement.IsWallKickReady ? "Ready" : "--";
         }
 
         private string GetRunStateText()

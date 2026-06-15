@@ -362,21 +362,21 @@ MonoBehaviour:
   _groundAcceleration: 110
   _groundFriction: 5.5
   _groundStopSpeed: 1
-  _bhopSpeedMultiplier: 1.65
+  _bhopSpeedMultiplier: 2.5
   _timedJumpHorizontalRetention: 1
-  _autoJumpHorizontalRetention: 0.88
+  _autoJumpHorizontalRetention: 0.92
   _landingFrictionSkipFrames: 0
   _autoBhopWhenJumpHeld: 1
   _skipFrictionOnBufferedJump: 1
-  _airAcceleration: 58
-  _airControlResponsiveness: 6
+  _airAcceleration: 72
+  _airControlResponsiveness: 7
   _airWishSpeedMultiplier: 1
-  _forwardAirAccelerationScale: 0.7
-  _strafeAirAccelerationScale: 0.95
+  _forwardAirAccelerationScale: 0.45
+  _strafeAirAccelerationScale: 1.15
   _minimumSpeedForStrafeScaling: 7
-  _smallSteerBonusAngle: 10
-  _fullStrafeBonusAngle: 38
-  _lateralInputStrafeInfluence: 0.45
+  _smallSteerBonusAngle: 6
+  _fullStrafeBonusAngle: 28
+  _lateralInputStrafeInfluence: 0.75
   _jumpHeight: 2.35
   _gravity: 32
   _jumpBufferTime: 0.16
@@ -393,40 +393,22 @@ MonoBehaviour:
   _wallLayer:
     serializedVersion: 2
     m_Bits: 0
-  _wallCheckDistance: 1.35
-  _wallCheckRadius: 0.22
+  _wallCheckDistance: 0.75
   _wallCheckHeight: 1.05
-  _wallKickMinSpeed: 0
-  _wallKickCoyoteTime: 0.22
-  _wallKickDetachCooldown: 0.55
-  _sameWallReattachCooldown: 0.75
-  _wallKickReturnControlDampingTime: 0.4
-  _wallKickReturnControlScale: 0
-  _wallRideAwaySpeedThreshold: 0.25
-  _wallContactVelocityTrim: 0.95
-  _wallRideGravity: 18
-  _wallRideMaxFallSpeed: 7
-  _wallRideMaxRiseSpeed: 1.5
-  _wallRideUpwardBrake: 70
-  _wallRideAcceleration: 42
-  _wallRideMaxSpeed: 13
-  _wallKickMinimumRideTime: 0.08
-  _wallKickHorizontalImpulse: 18
-  _wallKickForwardImpulse: 10
-  _wallKickForwardRetention: 0.75
-  _wallKickVerticalVelocity: 23.5
-  _wallKickMinimumExitSpeed: 24
-  _wallKickViewAssist: 0.25
-  _wallKickSpeedCapMultiplier: 3.6
-  _wallKickMomentumCapDuration: 0.35
-  _wallKickFeedbackTime: 0.2
-  _maxAirWallKicks: 0
-  _requireNewWallForRepeatKick: 0
+  _wallKickMinSpeed: 6.5
+  _wallKickCoyoteTime: 0.16
+  _wallKickDetachCooldown: 0.18
+  _wallContactVelocityTrim: 0.65
+  _wallSlideGravity: 14
+  _wallSlideMaxFallSpeed: 6
+  _wallKickHorizontalImpulse: 14
+  _wallKickForwardImpulse: 6
+  _wallKickForwardRetention: 0.45
+  _wallKickVerticalVelocity: 9
+  _wallKickSpeedCapMultiplier: 2.7
+  _maxAirWallKicks: 2
+  _requireNewWallForRepeatKick: 1
   _sameWallNormalDotThreshold: 0.85
-  _useLowFrictionColliderMaterial: 1
-  _lateralContactMaxNormalY: 0.35
-  _lateralCollisionSlideStrength: 1
-  _lateralCollisionSlideGraceTime: 0.08
   _groundLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -491,7 +473,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &510000101
 Transform:
   m_ObjectHideFlags: 0
@@ -637,8 +619,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: 16
     y: 16
-    width: 540
-    height: 420
+    width: 500
+    height: 360
 --- !u!114 &510000903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -657,9 +639,6 @@ MonoBehaviour:
   _disableLegacyRunway: 1
   _prototypeTexture: {fileID: 2800000, guid: 6c7c2090b7facea48a9bc7539f648f0d, type: 3}
   _textureTilesPerMeter: 0.25
-  _useLowFrictionCourseColliders: 1
-  _useSingleRunwayFloorCollision: 1
-  _disableGuideMarkerCollision: 1
   _startPosition: {x: 0, y: 1.05, z: 0}
   _finishPosition: {x: 0, y: 2, z: 260}
   _startSpeedThreshold: 1
@@ -769,7 +748,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa5667cb719c46dd9b026da225dcf6dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _movement: {fileID: 0}
   _target: {fileID: 510000001}
   _eyeHeight: 1.55
   _mouseSensitivity: 0.09
@@ -777,11 +755,6 @@ MonoBehaviour:
   _minPitch: -85
   _maxPitch: 85
   _lockCursorOnPlay: 1
-  _strafeTiltAngle: 3.5
-  _wallRideTiltAngle: 8
-  _wallKickTiltPunchAngle: 5
-  _tiltSharpness: 12
-  _wallKickTiltSharpness: 18
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

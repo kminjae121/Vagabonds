@@ -6,6 +6,7 @@ namespace _Code.MovementTest
 {
     public class MovementTestCameraFollow : MonoBehaviour
     {
+        [SerializeField] private PlayerMoveCompo _movement;
         [SerializeField] private Transform _target;
         [SerializeField] private float _eyeHeight = 1.55f;
         [SerializeField] private float _mouseSensitivity = 0.09f;
@@ -13,17 +14,29 @@ namespace _Code.MovementTest
         [SerializeField] private float _minPitch = -85f;
         [SerializeField] private float _maxPitch = 85f;
         [SerializeField] private bool _lockCursorOnPlay = true;
+        [SerializeField] private float _strafeTiltAngle = 3.5f;
+        [SerializeField] private float _wallRideTiltAngle = 8f;
+        [SerializeField] private float _wallKickTiltPunchAngle = 5f;
+        [SerializeField] private float _tiltSharpness = 12f;
+        [SerializeField] private float _wallKickTiltSharpness = 18f;
 
         private float _yaw;
         private float _pitch;
+        private float _roll;
 
         private void Awake()
         {
+            if (_movement == null)
+                _movement = FindFirstObjectByType<PlayerMoveCompo>();
+
+            if (_target == null && _movement != null)
+                _target = _movement.transform;
+
             if (_target == null)
             {
-                PlayerMoveCompo movement = FindFirstObjectByType<PlayerMoveCompo>();
-                if (movement != null)
-                    _target = movement.transform;
+                _movement = FindFirstObjectByType<PlayerMoveCompo>();
+                if (_movement != null)
+                    _target = _movement.transform;
             }
 
             if (_target != null)
@@ -57,7 +70,8 @@ namespace _Code.MovementTest
                 return;
 
             transform.position = _target.position + Vector3.up * _eyeHeight;
-            transform.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+            UpdateCameraRoll();
+            transform.rotation = Quaternion.Euler(_pitch, _yaw, _roll);
         }
 
         private void UpdateCursorLock()
@@ -89,6 +103,41 @@ namespace _Code.MovementTest
             _pitch = Mathf.Clamp(_pitch - lookDelta.y, _minPitch, _maxPitch);
 
             _target.rotation = Quaternion.Euler(0f, _yaw, 0f);
+        }
+
+        private void UpdateCameraRoll()
+        {
+            float targetRoll = 0f;
+            float sharpness = _tiltSharpness;
+
+            if (_movement != null && _target != null)
+            {
+                targetRoll += -_movement.MoveInput.x * _strafeTiltAngle;
+
+                if (_movement.IsWallRiding || _movement.IsWallKickReady)
+                    targetRoll += GetWallSideTilt(_wallRideTiltAngle);
+
+                if (_movement.WallKickFeedbackRemainingTime > 0f)
+                {
+                    targetRoll += GetWallSideTilt(_wallKickTiltPunchAngle);
+                    sharpness = _wallKickTiltSharpness;
+                }
+            }
+
+            float blend = 1f - Mathf.Exp(-Mathf.Max(0f, sharpness) * Time.deltaTime);
+            _roll = Mathf.Lerp(_roll, targetRoll, blend);
+        }
+
+        private float GetWallSideTilt(float angle)
+        {
+            if (_movement == null || _target == null || _movement.WallNormal.sqrMagnitude <= Mathf.Epsilon)
+                return 0f;
+
+            float side = Vector3.Dot(_movement.WallNormal.normalized, _target.right);
+            if (Mathf.Abs(side) <= 0.01f)
+                return 0f;
+
+            return -Mathf.Sign(side) * angle;
         }
 
         private static void LockCursor()
