@@ -5,6 +5,8 @@ namespace _Code.EntityCompo.Move
 {
     public class PlayerMoveCompo : MonoBehaviour, IEntityComponent
     {
+        private const int MaxLateralContactNormals = 4;
+
         public enum HopMode
         {
             None,
@@ -21,25 +23,25 @@ namespace _Code.EntityCompo.Move
 
         [Header("2. Bunnyhop Momentum")]
         [FormerlySerializedAs("_maxBhopSpeedMultiplier")]
-        [SerializeField] private float _bhopSpeedMultiplier = 2.5f;
+        [SerializeField] private float _bhopSpeedMultiplier = 1.65f;
         [FormerlySerializedAs("_jumpHorizontalRetention")]
         [SerializeField, Range(0f, 1.2f)] private float _timedJumpHorizontalRetention = 1f;
-        [SerializeField, Range(0f, 1.2f)] private float _autoJumpHorizontalRetention = 0.92f;
+        [SerializeField, Range(0f, 1.2f)] private float _autoJumpHorizontalRetention = 0.88f;
         [SerializeField] private int _landingFrictionSkipFrames;
         [SerializeField] private bool _autoBhopWhenJumpHeld = true;
         [SerializeField] private bool _skipFrictionOnBufferedJump = true;
 
         [Header("3. Air Steering")]
-        [SerializeField] private float _airAcceleration = 72f;
+        [SerializeField] private float _airAcceleration = 58f;
         [FormerlySerializedAs("_airControl")]
-        [SerializeField] private float _airControlResponsiveness = 7f;
+        [SerializeField] private float _airControlResponsiveness = 6f;
         [SerializeField] private float _airWishSpeedMultiplier = 1f;
-        [SerializeField, Range(0f, 2f)] private float _forwardAirAccelerationScale = 0.45f;
-        [SerializeField, Range(0f, 2f)] private float _strafeAirAccelerationScale = 1.15f;
+        [SerializeField, Range(0f, 2f)] private float _forwardAirAccelerationScale = 0.7f;
+        [SerializeField, Range(0f, 2f)] private float _strafeAirAccelerationScale = 0.95f;
         [SerializeField] private float _minimumSpeedForStrafeScaling = 7f;
-        [SerializeField] private float _smallSteerBonusAngle = 6f;
-        [SerializeField] private float _fullStrafeBonusAngle = 28f;
-        [SerializeField, Range(0f, 1f)] private float _lateralInputStrafeInfluence = 0.75f;
+        [SerializeField] private float _smallSteerBonusAngle = 10f;
+        [SerializeField] private float _fullStrafeBonusAngle = 38f;
+        [SerializeField, Range(0f, 1f)] private float _lateralInputStrafeInfluence = 0.45f;
 
         [Header("4. Jump and Gravity")]
         [SerializeField] private float _jumpHeight = 2.35f;
@@ -62,22 +64,42 @@ namespace _Code.EntityCompo.Move
         [Header("7. Wall Kick")]
         [SerializeField] private bool _enableWallKick = true;
         [SerializeField] private LayerMask _wallLayer;
-        [SerializeField] private float _wallCheckDistance = 0.75f;
+        [SerializeField] private float _wallCheckDistance = 1.35f;
+        [SerializeField] private float _wallCheckRadius = 0.22f;
         [SerializeField] private float _wallCheckHeight = 1.05f;
-        [SerializeField] private float _wallKickMinSpeed = 6.5f;
-        [SerializeField] private float _wallKickCoyoteTime = 0.16f;
-        [SerializeField] private float _wallKickDetachCooldown = 0.18f;
-        [SerializeField] private float _wallContactVelocityTrim = 0.65f;
-        [SerializeField] private float _wallSlideGravity = 14f;
-        [SerializeField] private float _wallSlideMaxFallSpeed = 6f;
-        [SerializeField] private float _wallKickHorizontalImpulse = 14f;
-        [SerializeField] private float _wallKickForwardImpulse = 6f;
-        [SerializeField, Range(0f, 1f)] private float _wallKickForwardRetention = 0.45f;
-        [SerializeField] private float _wallKickVerticalVelocity = 9f;
-        [SerializeField] private float _wallKickSpeedCapMultiplier = 2.7f;
-        [SerializeField] private int _maxAirWallKicks = 2;
-        [SerializeField] private bool _requireNewWallForRepeatKick = true;
+        [SerializeField] private float _wallKickMinSpeed = 0f;
+        [SerializeField] private float _wallKickCoyoteTime = 0.22f;
+        [SerializeField] private float _wallKickDetachCooldown = 0.55f;
+        [SerializeField] private float _sameWallReattachCooldown = 0.75f;
+        [SerializeField] private float _wallKickReturnControlDampingTime = 0.4f;
+        [SerializeField, Range(0f, 1f)] private float _wallKickReturnControlScale = 0f;
+        [SerializeField] private float _wallRideAwaySpeedThreshold = 0.25f;
+        [SerializeField] private float _wallContactVelocityTrim = 0.95f;
+        [SerializeField] private float _wallRideGravity = 18f;
+        [SerializeField] private float _wallRideMaxFallSpeed = 7f;
+        [SerializeField] private float _wallRideMaxRiseSpeed = 1.5f;
+        [SerializeField] private float _wallRideUpwardBrake = 70f;
+        [SerializeField] private float _wallRideAcceleration = 42f;
+        [SerializeField] private float _wallRideMaxSpeed = 13f;
+        [SerializeField] private float _wallKickMinimumRideTime = 0.08f;
+        [SerializeField] private float _wallKickHorizontalImpulse = 18f;
+        [SerializeField] private float _wallKickForwardImpulse = 10f;
+        [SerializeField, Range(0f, 1.2f)] private float _wallKickForwardRetention = 0.75f;
+        [SerializeField] private float _wallKickVerticalVelocity = 23.5f;
+        [SerializeField] private float _wallKickMinimumExitSpeed = 24f;
+        [SerializeField, Range(0f, 1f)] private float _wallKickViewAssist = 0.25f;
+        [SerializeField] private float _wallKickSpeedCapMultiplier = 3.6f;
+        [SerializeField] private float _wallKickMomentumCapDuration = 0.35f;
+        [SerializeField] private float _wallKickFeedbackTime = 0.2f;
+        [SerializeField] private int _maxAirWallKicks;
+        [SerializeField] private bool _requireNewWallForRepeatKick = false;
         [SerializeField, Range(0f, 1f)] private float _sameWallNormalDotThreshold = 0.85f;
+
+        [Header("8. Collision Smoothing")]
+        [SerializeField] private bool _useLowFrictionColliderMaterial = true;
+        [SerializeField, Range(0f, 1f)] private float _lateralContactMaxNormalY = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float _lateralCollisionSlideStrength = 1f;
+        [SerializeField] private float _lateralCollisionSlideGraceTime = 0.08f;
 
         [Header("Ground Check")]
         [SerializeField] private LayerMask _groundLayer;
@@ -102,11 +124,23 @@ namespace _Code.EntityCompo.Move
         private Vector3 _wallForward;
         private Vector3 _lastWallKickNormal;
         private float _lastWallContactTime = -999f;
+        private float _lastWallKickTime = -999f;
+        private float _wallRideStartTime = -999f;
+        private float _wallKickMomentumCapUntilTime = -999f;
         private float _wallKickCooldownUntil = -999f;
+        private float _sameWallReattachLockedUntilTime = -999f;
+        private readonly Vector3[] _lateralContactNormals = new Vector3[MaxLateralContactNormals];
+        private PhysicsMaterial _lowFrictionMaterial;
+        private float _lastLateralContactTime = -999f;
+        private int _lateralContactCount;
         private int _airWallKickCount;
+        private int _timedHopCount;
+        private int _autoRepeatHopCount;
+        private int _wallRideEnterCount;
         private bool _isGrounded;
         private bool _wasGrounded;
         private bool _isTouchingWall;
+        private bool _isWallRiding;
         private bool _jumpHeld;
 
         public bool IsGrounded => _isGrounded;
@@ -118,10 +152,19 @@ namespace _Code.EntityCompo.Move
         public float CurrentSpeedCap => GetCurrentHorizontalSpeedCap();
         public float CombatMomentumRemainingTime => Mathf.Max(0f, _combatMomentumCapUntilTime - Time.time);
         public HopMode LastConsumedHopMode => _lastConsumedHopMode;
+        public Vector2 MoveInput => _moveInput;
         public bool IsTouchingWall => _isTouchingWall;
-        public bool IsWallKickReady => IsWallContactAvailable() && CanUseWallKickCount();
+        public bool IsWallRiding => _isWallRiding;
+        public bool IsWallKickReady => _isWallRiding && CanUseWallKickCount();
         public float WallKickGraceRemainingTime => Mathf.Max(0f, _wallKickCoyoteTime - (Time.time - _lastWallContactTime));
+        public float WallKickFeedbackRemainingTime => Mathf.Max(0f, _wallKickFeedbackTime - (Time.time - _lastWallKickTime));
+        public float WallKickReturnDampingRemainingTime => ShouldDampenWallKickReturnControl()
+            ? Mathf.Max(0f, _wallKickReturnControlDampingTime - (Time.time - _lastWallKickTime))
+            : 0f;
         public int AirWallKickCount => _airWallKickCount;
+        public int TimedHopCount => _timedHopCount;
+        public int AutoRepeatHopCount => _autoRepeatHopCount;
+        public int WallRideEnterCount => _wallRideEnterCount;
         public Vector3 WallNormal => _wallNormal;
         public float CurrentHorizontalSpeed
         {
@@ -150,6 +193,10 @@ namespace _Code.EntityCompo.Move
             _rbCompo.freezeRotation = true;
             _rbCompo.interpolation = RigidbodyInterpolation.Interpolate;
             _rbCompo.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            _rbCompo.solverIterations = Mathf.Max(_rbCompo.solverIterations, 10);
+            _rbCompo.solverVelocityIterations = Mathf.Max(_rbCompo.solverVelocityIterations, 10);
+
+            ApplyLowFrictionColliderMaterial();
         }
 
         private void OnValidate()
@@ -181,19 +228,36 @@ namespace _Code.EntityCompo.Move
             _bloodSpeedBonusPerStack = Mathf.Max(0f, _bloodSpeedBonusPerStack);
             _maxBloodStacksForMovement = Mathf.Max(0, _maxBloodStacksForMovement);
             _wallCheckDistance = Mathf.Max(0f, _wallCheckDistance);
+            _wallCheckRadius = Mathf.Max(0f, _wallCheckRadius);
             _wallCheckHeight = Mathf.Max(0f, _wallCheckHeight);
             _wallKickMinSpeed = Mathf.Max(0f, _wallKickMinSpeed);
             _wallKickCoyoteTime = Mathf.Max(0f, _wallKickCoyoteTime);
             _wallKickDetachCooldown = Mathf.Max(0f, _wallKickDetachCooldown);
+            _sameWallReattachCooldown = Mathf.Max(0f, _sameWallReattachCooldown);
+            _wallKickReturnControlDampingTime = Mathf.Max(0f, _wallKickReturnControlDampingTime);
+            _wallKickReturnControlScale = Mathf.Clamp01(_wallKickReturnControlScale);
+            _wallRideAwaySpeedThreshold = Mathf.Max(0f, _wallRideAwaySpeedThreshold);
             _wallContactVelocityTrim = Mathf.Clamp01(_wallContactVelocityTrim);
-            _wallSlideGravity = Mathf.Max(0f, _wallSlideGravity);
-            _wallSlideMaxFallSpeed = Mathf.Max(0f, _wallSlideMaxFallSpeed);
+            _wallRideGravity = Mathf.Max(0f, _wallRideGravity);
+            _wallRideMaxFallSpeed = Mathf.Max(0f, _wallRideMaxFallSpeed);
+            _wallRideMaxRiseSpeed = Mathf.Max(0f, _wallRideMaxRiseSpeed);
+            _wallRideUpwardBrake = Mathf.Max(0f, _wallRideUpwardBrake);
+            _wallRideAcceleration = Mathf.Max(0f, _wallRideAcceleration);
+            _wallRideMaxSpeed = Mathf.Max(0f, _wallRideMaxSpeed);
+            _wallKickMinimumRideTime = Mathf.Max(0f, _wallKickMinimumRideTime);
             _wallKickHorizontalImpulse = Mathf.Max(0f, _wallKickHorizontalImpulse);
             _wallKickForwardImpulse = Mathf.Max(0f, _wallKickForwardImpulse);
-            _wallKickForwardRetention = Mathf.Clamp01(_wallKickForwardRetention);
+            _wallKickForwardRetention = Mathf.Max(0f, _wallKickForwardRetention);
             _wallKickVerticalVelocity = Mathf.Max(0f, _wallKickVerticalVelocity);
+            _wallKickMinimumExitSpeed = Mathf.Max(0f, _wallKickMinimumExitSpeed);
+            _wallKickViewAssist = Mathf.Clamp01(_wallKickViewAssist);
             _wallKickSpeedCapMultiplier = Mathf.Max(_bhopSpeedMultiplier, _wallKickSpeedCapMultiplier);
+            _wallKickMomentumCapDuration = Mathf.Max(0f, _wallKickMomentumCapDuration);
+            _wallKickFeedbackTime = Mathf.Max(0f, _wallKickFeedbackTime);
             _maxAirWallKicks = Mathf.Max(0, _maxAirWallKicks);
+            _lateralContactMaxNormalY = Mathf.Clamp01(_lateralContactMaxNormalY);
+            _lateralCollisionSlideStrength = Mathf.Clamp01(_lateralCollisionSlideStrength);
+            _lateralCollisionSlideGraceTime = Mathf.Max(0f, _lateralCollisionSlideGraceTime);
         }
 
         public void SetMove(Vector2 dir)
@@ -245,6 +309,17 @@ namespace _Code.EntityCompo.Move
             _bloodStacks = 0;
         }
 
+        public void ResetMovementStats()
+        {
+            _lastConsumedHopMode = HopMode.None;
+            _timedHopCount = 0;
+            _autoRepeatHopCount = 0;
+            _wallRideEnterCount = 0;
+            _airWallKickCount = 0;
+            _lastWallKickTime = -999f;
+            _lastWallKickNormal = Vector3.zero;
+        }
+
         public void ApplyKillImpulse(Vector3 direction, int killCount = 1)
         {
             ApplyCombatImpulse(direction, killCount);
@@ -255,23 +330,35 @@ namespace _Code.EntityCompo.Move
             if (_rbCompo == null)
                 return;
 
-            Vector3 impulseDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
-            if (impulseDirection.sqrMagnitude <= Mathf.Epsilon)
-                impulseDirection = _entity != null ? _entity.transform.forward : transform.forward;
-
-            impulseDirection.Normalize();
             ActivateCombatMomentumCap();
+            MomentumModifier.ApplyCombatImpulse(
+                _rbCompo,
+                _entity != null ? _entity.transform : transform,
+                direction,
+                killCount,
+                _killImpulseSpeed,
+                _killImpulseVerticalLift,
+                _multiKillImpulseMultiplier,
+                GetCurrentHorizontalSpeedCap());
+        }
 
-            float killMultiplier = killCount > 1 ? _multiKillImpulseMultiplier : 1f;
-            Vector3 velocity = _rbCompo.linearVelocity;
-            Vector3 horizontalVelocity = GetHorizontalVelocity(velocity);
-            horizontalVelocity += impulseDirection * (_killImpulseSpeed * killMultiplier);
-            horizontalVelocity = ClampHorizontalSpeed(horizontalVelocity, GetCurrentHorizontalSpeedCap());
+        private void OnCollisionStay(Collision collision)
+        {
+            if (_lateralCollisionSlideStrength <= 0f)
+                return;
 
-            velocity.x = horizontalVelocity.x;
-            velocity.z = horizontalVelocity.z;
-            velocity.y = Mathf.Max(velocity.y, _killImpulseVerticalLift);
-            _rbCompo.linearVelocity = velocity;
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                Vector3 normal = collision.GetContact(i).normal;
+                if (Mathf.Abs(normal.y) > _lateralContactMaxNormalY)
+                    continue;
+
+                normal.y = 0f;
+                if (normal.sqrMagnitude <= Mathf.Epsilon)
+                    continue;
+
+                AddLateralContactNormal(normal.normalized);
+            }
         }
 
         private void FixedUpdate()
@@ -289,9 +376,9 @@ namespace _Code.EntityCompo.Move
 
             UpdateGroundState();
 
-            Vector3 wishDirection = GetWishDirection();
+            Vector3 wishDirection = DampenWallKickReturnControl(GetWishDirection(), out float wishControlScale);
             float wishSpeed = EffectiveMaxSpeed;
-            UpdateWallContactState(horizontalVelocity, wishDirection);
+            UpdateWallContactState(horizontalVelocity);
 
             if (_isGrounded)
             {
@@ -303,10 +390,18 @@ namespace _Code.EntityCompo.Move
             }
             else
             {
-                float airAcceleration = _airAcceleration * GetAirAccelerationScale(horizontalVelocity, wishDirection);
-                horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed * _airWishSpeedMultiplier, airAcceleration, deltaTime);
-                horizontalVelocity = ApplyAirControl(horizontalVelocity, wishDirection, deltaTime);
-                ApplyAirborneGravity(ref horizontalVelocity, ref verticalVelocity, deltaTime);
+                if (_isWallRiding)
+                {
+                    horizontalVelocity = ApplyWallRideMovement(horizontalVelocity, wishDirection, deltaTime);
+                    ApplyWallRideGravity(ref verticalVelocity, deltaTime);
+                }
+                else
+                {
+                    float airAcceleration = _airAcceleration * GetAirAccelerationScale(horizontalVelocity, wishDirection) * wishControlScale;
+                    horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed * _airWishSpeedMultiplier, airAcceleration, deltaTime);
+                    horizontalVelocity = ApplyAirControl(horizontalVelocity, wishDirection, deltaTime, wishControlScale);
+                    verticalVelocity -= _gravity * deltaTime;
+                }
             }
 
             if (CanConsumeWallKick())
@@ -316,6 +411,7 @@ namespace _Code.EntityCompo.Move
             else if (CanConsumeJump())
             {
                 _lastConsumedHopMode = _pendingHopMode;
+                RegisterConsumedHop(_lastConsumedHopMode);
                 horizontalVelocity = ApplyJumpMomentumRetention(horizontalVelocity, _pendingHopMode);
                 verticalVelocity = Mathf.Sqrt(2f * _gravity * _jumpHeight);
                 _lastJumpRequestTime = -999f;
@@ -324,10 +420,13 @@ namespace _Code.EntityCompo.Move
                 _isGrounded = false;
                 _frictionSkipFrames = _landingFrictionSkipFrames;
                 _pendingHopMode = HopMode.None;
+                UpdateWallContactState(horizontalVelocity);
             }
 
+            horizontalVelocity = ApplyLateralCollisionSlide(horizontalVelocity);
             horizontalVelocity = ClampHorizontalSpeed(horizontalVelocity, GetCurrentHorizontalSpeedCap());
             _rbCompo.linearVelocity = new Vector3(horizontalVelocity.x, verticalVelocity, horizontalVelocity.z);
+            ClearLateralContactNormals();
             _wasGrounded = _isGrounded;
         }
 
@@ -340,6 +439,18 @@ namespace _Code.EntityCompo.Move
             _pendingHopMode = hopMode;
         }
 
+        private void RegisterConsumedHop(HopMode hopMode)
+        {
+            if (hopMode == HopMode.Timed)
+            {
+                _timedHopCount++;
+                return;
+            }
+
+            if (hopMode == HopMode.AutoRepeat)
+                _autoRepeatHopCount++;
+        }
+
         private Vector3 GetWishDirection()
         {
             Vector3 localInput = new Vector3(_moveInput.x, 0f, _moveInput.y);
@@ -347,6 +458,42 @@ namespace _Code.EntityCompo.Move
                 return Vector3.zero;
 
             return _entity.transform.TransformDirection(localInput).normalized;
+        }
+
+        private Vector3 DampenWallKickReturnControl(Vector3 wishDirection, out float controlScale)
+        {
+            controlScale = 1f;
+
+            if (!ShouldDampenWallKickReturnControl() || wishDirection.sqrMagnitude <= Mathf.Epsilon)
+                return wishDirection;
+
+            Vector3 exitDirection = _lastWallKickNormal.normalized;
+            Vector3 returnDirection = -exitDirection;
+            float returnAmount = Vector3.Dot(wishDirection, returnDirection);
+            if (returnAmount <= 0f)
+                return wishDirection;
+
+            float elapsed = Time.time - _lastWallKickTime;
+            float recovery = _wallKickReturnControlDampingTime > 0f
+                ? Mathf.Clamp01(elapsed / _wallKickReturnControlDampingTime)
+                : 1f;
+            float returnScale = Mathf.Lerp(_wallKickReturnControlScale, 1f, recovery);
+
+            Vector3 returnComponent = returnDirection * returnAmount;
+            Vector3 freeComponent = wishDirection - returnComponent;
+            Vector3 dampedDirection = freeComponent + returnComponent * returnScale;
+            dampedDirection.y = 0f;
+
+            controlScale = Mathf.Clamp01(dampedDirection.magnitude);
+            return controlScale > Mathf.Epsilon ? dampedDirection / controlScale : Vector3.zero;
+        }
+
+        private bool ShouldDampenWallKickReturnControl()
+        {
+            return !_isGrounded
+                   && _wallKickReturnControlDampingTime > 0f
+                   && Time.time - _lastWallKickTime <= _wallKickReturnControlDampingTime
+                   && _lastWallKickNormal.sqrMagnitude > Mathf.Epsilon;
         }
 
         private bool ShouldApplyGroundFriction()
@@ -392,15 +539,17 @@ namespace _Code.EntityCompo.Move
             }
         }
 
-        private void UpdateWallContactState(Vector3 horizontalVelocity, Vector3 wishDirection)
+        private void UpdateWallContactState(Vector3 horizontalVelocity)
         {
+            bool wasWallRiding = _isWallRiding;
+
             if (_isGrounded || !_enableWallKick || Time.time < _wallKickCooldownUntil)
             {
                 ClearWallTouch();
                 return;
             }
 
-            if (horizontalVelocity.magnitude < _wallKickMinSpeed)
+            if (_wallKickMinSpeed > 0f && horizontalVelocity.magnitude < _wallKickMinSpeed)
             {
                 ClearWallTouch();
                 return;
@@ -412,28 +561,53 @@ namespace _Code.EntityCompo.Move
                 return;
             }
 
+            if (!CanAttachToWall(wallHit.normal, horizontalVelocity))
+            {
+                ClearWallTouch();
+                return;
+            }
+
             _isTouchingWall = true;
+            _isWallRiding = true;
             _wallNormal = wallHit.normal;
-            _wallForward = GetWallForward(_wallNormal, wishDirection);
+            _wallForward = GetWallForward(_wallNormal, GetWallTravelReference(_wallNormal, horizontalVelocity));
             _lastWallContactTime = Time.time;
+
+            if (!wasWallRiding)
+            {
+                _wallRideStartTime = Time.time;
+                _wallRideEnterCount++;
+                ClearBufferedTimedJump();
+            }
         }
 
         private bool TryFindKickableWall(out RaycastHit wallHit)
         {
-            Vector3 origin = _entity.transform.position + Vector3.up * _wallCheckHeight;
-            Vector3 forward = _entity.transform.forward;
-            Vector3 right = _entity.transform.right;
             wallHit = default;
             bool foundWall = false;
             float closestDistance = float.MaxValue;
+
+            Vector3 basePosition = _entity.transform.position;
+            float lowerHeight = Mathf.Max(0.35f, _wallCheckHeight - 0.45f);
+            float upperHeight = _wallCheckHeight + 0.45f;
+
+            TryWallRaysFrom(basePosition + Vector3.up * _wallCheckHeight, ref wallHit, ref foundWall, ref closestDistance);
+            TryWallRaysFrom(basePosition + Vector3.up * lowerHeight, ref wallHit, ref foundWall, ref closestDistance);
+            TryWallRaysFrom(basePosition + Vector3.up * upperHeight, ref wallHit, ref foundWall, ref closestDistance);
+
+            return foundWall;
+        }
+
+        private void TryWallRaysFrom(Vector3 origin, ref RaycastHit wallHit, ref bool foundWall, ref float closestDistance)
+        {
+            Vector3 forward = _entity.transform.forward;
+            Vector3 right = _entity.transform.right;
 
             TryWallRay(origin, forward, ref wallHit, ref foundWall, ref closestDistance);
             TryWallRay(origin, right, ref wallHit, ref foundWall, ref closestDistance);
             TryWallRay(origin, -right, ref wallHit, ref foundWall, ref closestDistance);
             TryWallRay(origin, (forward + right).normalized, ref wallHit, ref foundWall, ref closestDistance);
             TryWallRay(origin, (forward - right).normalized, ref wallHit, ref foundWall, ref closestDistance);
-
-            return foundWall;
         }
 
         private void TryWallRay(Vector3 origin, Vector3 direction, ref RaycastHit bestHit, ref bool foundWall, ref float closestDistance)
@@ -441,7 +615,12 @@ namespace _Code.EntityCompo.Move
             if (direction.sqrMagnitude <= Mathf.Epsilon)
                 return;
 
-            if (!Physics.Raycast(origin, direction, out RaycastHit hit, _wallCheckDistance, GetWallLayerMask(), QueryTriggerInteraction.Ignore))
+            RaycastHit hit;
+            bool hitWall = _wallCheckRadius > 0f
+                ? Physics.SphereCast(origin, _wallCheckRadius, direction, out hit, _wallCheckDistance, GetWallLayerMask(), QueryTriggerInteraction.Ignore)
+                : Physics.Raycast(origin, direction, out hit, _wallCheckDistance, GetWallLayerMask(), QueryTriggerInteraction.Ignore);
+
+            if (!hitWall)
                 return;
 
             if (!IsKickableWall(hit) || hit.distance >= closestDistance)
@@ -457,57 +636,93 @@ namespace _Code.EntityCompo.Move
             return Mathf.Abs(hit.normal.y) <= 0.2f;
         }
 
-        private Vector3 GetWallForward(Vector3 wallNormal, Vector3 wishDirection)
+        private bool CanAttachToWall(Vector3 wallNormal, Vector3 horizontalVelocity)
         {
-            Vector3 wallForward = Vector3.Cross(Vector3.up, wallNormal).normalized;
-            Vector3 referenceDirection = wishDirection.sqrMagnitude > Mathf.Epsilon
-                ? wishDirection
-                : _entity.transform.forward;
+            Vector3 normalizedWallNormal = wallNormal.normalized;
 
-            if (Vector3.Dot(wallForward, referenceDirection) < 0f)
-                wallForward = -wallForward;
-
-            return wallForward;
-        }
-
-        private void ApplyAirborneGravity(ref Vector3 horizontalVelocity, ref float verticalVelocity, float deltaTime)
-        {
-            if (!IsWallContactAvailable())
+            if (Time.time < _sameWallReattachLockedUntilTime
+                && _lastWallKickNormal.sqrMagnitude > Mathf.Epsilon
+                && Vector3.Dot(normalizedWallNormal, _lastWallKickNormal.normalized) >= _sameWallNormalDotThreshold)
             {
-                verticalVelocity -= _gravity * deltaTime;
-                return;
+                return false;
             }
 
-            float intoWallSpeed = Vector3.Dot(horizontalVelocity, -_wallNormal);
-            if (intoWallSpeed > 0f)
-                horizontalVelocity += _wallNormal * (intoWallSpeed * _wallContactVelocityTrim);
+            float awaySpeed = Vector3.Dot(horizontalVelocity, normalizedWallNormal);
+            return awaySpeed <= _wallRideAwaySpeedThreshold;
+        }
 
-            verticalVelocity = Mathf.Max(verticalVelocity - _wallSlideGravity * deltaTime, -_wallSlideMaxFallSpeed);
+        private Vector3 GetWallForward(Vector3 wallNormal, Vector3 wishDirection)
+        {
+            return WallMove.GetWallForward(wallNormal, wishDirection, _entity.transform);
+        }
+
+        private Vector3 GetWallTravelReference(Vector3 wallNormal, Vector3 horizontalVelocity)
+        {
+            return WallMove.GetTravelReference(wallNormal, horizontalVelocity, _entity.transform);
+        }
+
+        private Vector3 ApplyWallRideMovement(Vector3 horizontalVelocity, Vector3 wishDirection, float deltaTime)
+        {
+            return WallMove.ApplyRideMovement(
+                horizontalVelocity,
+                wishDirection,
+                _wallNormal,
+                _wallContactVelocityTrim,
+                _wallRideMaxSpeed,
+                _wallRideAcceleration,
+                deltaTime);
+        }
+
+        private void ApplyWallRideGravity(ref float verticalVelocity, float deltaTime)
+        {
+            WallMove.ApplyRideGravity(
+                ref verticalVelocity,
+                _wallRideGravity,
+                _wallRideMaxFallSpeed,
+                _wallRideMaxRiseSpeed,
+                _wallRideUpwardBrake,
+                deltaTime);
         }
 
         private bool CanConsumeWallKick()
         {
             return IsJumpBuffered()
                    && _pendingHopMode == HopMode.Timed
-                   && IsWallContactAvailable()
-                   && CanUseWallKickCount()
-                   && IsNewWallForRepeatKick();
+                   && _isWallRiding
+                   && Time.time - _wallRideStartTime >= _wallKickMinimumRideTime
+                   && _lastJumpRequestTime >= _wallRideStartTime
+                   && CanUseWallKickCount();
+        }
+
+        private void ClearBufferedTimedJump()
+        {
+            if (_pendingHopMode != HopMode.Timed)
+                return;
+
+            _lastJumpRequestTime = -999f;
+            _pendingHopMode = HopMode.None;
         }
 
         private void ConsumeWallKick(ref Vector3 horizontalVelocity, ref float verticalVelocity)
         {
-            Vector3 wallForward = _wallForward.sqrMagnitude > Mathf.Epsilon
-                ? _wallForward
-                : GetWallForward(_wallNormal, horizontalVelocity);
-
-            Vector3 alongWallVelocity = Vector3.Project(horizontalVelocity, wallForward);
-            float retainedForwardSpeed = Mathf.Max(Vector3.Dot(alongWallVelocity, wallForward) * _wallKickForwardRetention, _wallKickForwardImpulse);
-
-            horizontalVelocity = (_wallNormal.normalized * _wallKickHorizontalImpulse) + (wallForward.normalized * retainedForwardSpeed);
+            Vector3 wallNormal = _wallNormal.normalized;
+            horizontalVelocity = WallMove.BuildKickVelocity(
+                wallNormal,
+                _wallForward,
+                horizontalVelocity,
+                _entity.transform,
+                _wallKickHorizontalImpulse,
+                _wallKickForwardImpulse,
+                _wallKickForwardRetention,
+                _wallKickViewAssist,
+                _wallKickMinimumExitSpeed);
             horizontalVelocity = ClampHorizontalSpeed(horizontalVelocity, EffectiveMaxSpeed * _wallKickSpeedCapMultiplier);
             verticalVelocity = Mathf.Max(verticalVelocity, _wallKickVerticalVelocity);
 
-            _lastWallKickNormal = _wallNormal;
+            _lastWallKickNormal = wallNormal;
+            _lastWallKickTime = Time.time;
+            _wallKickMomentumCapUntilTime = Mathf.Max(_wallKickMomentumCapUntilTime, Time.time + _wallKickMomentumCapDuration);
+            _sameWallReattachLockedUntilTime = Mathf.Max(_sameWallReattachLockedUntilTime, Time.time + _sameWallReattachCooldown);
             _airWallKickCount++;
             ClearWallTouch();
             _lastJumpRequestTime = -999f;
@@ -539,6 +754,8 @@ namespace _Code.EntityCompo.Move
         private void ClearWallTouch()
         {
             _isTouchingWall = false;
+            _isWallRiding = false;
+            _wallRideStartTime = -999f;
 
             if (Time.time - _lastWallContactTime <= _wallKickCoyoteTime)
                 return;
@@ -586,41 +803,81 @@ namespace _Code.EntityCompo.Move
 
         private Vector3 ApplyFriction(Vector3 horizontalVelocity, float deltaTime)
         {
-            float speed = horizontalVelocity.magnitude;
-            if (speed <= Mathf.Epsilon)
-                return Vector3.zero;
-
-            float control = speed < _groundStopSpeed ? _groundStopSpeed : speed;
-            float drop = control * _groundFriction * deltaTime;
-            float nextSpeed = Mathf.Max(speed - drop, 0f);
-
-            return horizontalVelocity * (nextSpeed / speed);
+            return MovementMotor.ApplyFriction(horizontalVelocity, _groundStopSpeed, _groundFriction, deltaTime);
         }
 
         private static Vector3 Accelerate(Vector3 currentVelocity, Vector3 wishDirection, float wishSpeed, float acceleration, float deltaTime)
         {
-            if (wishDirection.sqrMagnitude <= Mathf.Epsilon || wishSpeed <= 0f)
-                return currentVelocity;
-
-            float currentSpeed = Vector3.Dot(currentVelocity, wishDirection);
-            float addSpeed = wishSpeed - currentSpeed;
-            if (addSpeed <= 0f)
-                return currentVelocity;
-
-            float accelSpeed = Mathf.Min(acceleration * wishSpeed * deltaTime, addSpeed);
-            return currentVelocity + wishDirection * accelSpeed;
+            return MovementMotor.Accelerate(currentVelocity, wishDirection, wishSpeed, acceleration, deltaTime);
         }
 
-        private Vector3 ApplyAirControl(Vector3 horizontalVelocity, Vector3 wishDirection, float deltaTime)
+        private Vector3 ApplyAirControl(Vector3 horizontalVelocity, Vector3 wishDirection, float deltaTime, float controlScale = 1f)
         {
-            if (wishDirection.sqrMagnitude <= Mathf.Epsilon || horizontalVelocity.sqrMagnitude <= 0.01f)
+            return MovementMotor.ApplyAirControl(horizontalVelocity, wishDirection, _airControlResponsiveness, deltaTime, controlScale);
+        }
+
+        private Vector3 ApplyLateralCollisionSlide(Vector3 horizontalVelocity)
+        {
+            if (_lateralContactCount == 0 || Time.time - _lastLateralContactTime > _lateralCollisionSlideGraceTime)
                 return horizontalVelocity;
 
-            float speed = horizontalVelocity.magnitude;
-            float steer = 1f - Mathf.Exp(-_airControlResponsiveness * deltaTime);
-            Vector3 blendedDirection = Vector3.Slerp(horizontalVelocity.normalized, wishDirection, steer).normalized;
+            Vector3 result = horizontalVelocity;
+            for (int i = 0; i < _lateralContactCount; i++)
+            {
+                Vector3 normal = _lateralContactNormals[i];
+                float intoSurfaceSpeed = Vector3.Dot(result, -normal);
+                if (intoSurfaceSpeed > 0f)
+                    result += normal * (intoSurfaceSpeed * _lateralCollisionSlideStrength);
+            }
 
-            return blendedDirection * speed;
+            return result;
+        }
+
+        private void AddLateralContactNormal(Vector3 normal)
+        {
+            for (int i = 0; i < _lateralContactCount; i++)
+            {
+                if (Vector3.Dot(_lateralContactNormals[i], normal) > 0.94f)
+                    return;
+            }
+
+            if (_lateralContactCount >= MaxLateralContactNormals)
+                return;
+
+            _lateralContactNormals[_lateralContactCount] = normal;
+            _lateralContactCount++;
+            _lastLateralContactTime = Time.time;
+        }
+
+        private void ClearLateralContactNormals()
+        {
+            _lateralContactCount = 0;
+        }
+
+        private void ApplyLowFrictionColliderMaterial()
+        {
+            if (!_useLowFrictionColliderMaterial || _capsuleCollider == null)
+                return;
+
+            _capsuleCollider.sharedMaterial = GetLowFrictionMaterial();
+        }
+
+        private PhysicsMaterial GetLowFrictionMaterial()
+        {
+            if (_lowFrictionMaterial != null)
+                return _lowFrictionMaterial;
+
+            _lowFrictionMaterial = new PhysicsMaterial("Vagabond Low Friction")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+                hideFlags = HideFlags.DontSave
+            };
+
+            return _lowFrictionMaterial;
         }
 
         private float GetAirAccelerationScale(Vector3 horizontalVelocity, Vector3 wishDirection)
@@ -664,46 +921,39 @@ namespace _Code.EntityCompo.Move
 
         private float GetEffectiveBaseSpeed()
         {
-            return _baseMaxSpeed * GetBloodSpeedMultiplier();
+            return MomentumModifier.GetEffectiveBaseSpeed(_baseMaxSpeed, _bloodStacks, _bloodSpeedBonusPerStack, _maxBloodStacksForMovement);
         }
 
         private float GetBloodSpeedMultiplier()
         {
-            int countedStacks = _maxBloodStacksForMovement > 0
-                ? Mathf.Min(_bloodStacks, _maxBloodStacksForMovement)
-                : _bloodStacks;
-
-            return 1f + countedStacks * _bloodSpeedBonusPerStack;
+            return MomentumModifier.GetBloodSpeedMultiplier(_bloodStacks, _bloodSpeedBonusPerStack, _maxBloodStacksForMovement);
         }
 
         private float GetBhopSpeedCap()
         {
-            return GetEffectiveBaseSpeed() * _bhopSpeedMultiplier;
+            return MomentumModifier.GetBhopSpeedCap(GetEffectiveBaseSpeed(), _bhopSpeedMultiplier);
         }
 
         private float GetCurrentHorizontalSpeedCap()
         {
-            float capMultiplier = _bhopSpeedMultiplier;
-            if (Time.time < _combatMomentumCapUntilTime)
-                capMultiplier = Mathf.Max(capMultiplier, _combatMomentumCapMultiplier);
-
-            return GetEffectiveBaseSpeed() * capMultiplier;
+            return MomentumModifier.GetCurrentHorizontalSpeedCap(
+                GetEffectiveBaseSpeed(),
+                _bhopSpeedMultiplier,
+                _combatMomentumCapMultiplier,
+                _combatMomentumCapUntilTime,
+                _wallKickSpeedCapMultiplier,
+                _wallKickMomentumCapUntilTime,
+                Time.time);
         }
 
         private static Vector3 GetHorizontalVelocity(Vector3 velocity)
         {
-            return new Vector3(velocity.x, 0f, velocity.z);
+            return MovementMotor.GetHorizontalVelocity(velocity);
         }
 
         private static Vector3 ClampHorizontalSpeed(Vector3 horizontalVelocity, float maxSpeed)
         {
-            if (maxSpeed <= 0f)
-                return Vector3.zero;
-
-            if (horizontalVelocity.sqrMagnitude <= maxSpeed * maxSpeed)
-                return horizontalVelocity;
-
-            return horizontalVelocity.normalized * maxSpeed;
+            return MovementMotor.ClampHorizontalSpeed(horizontalVelocity, maxSpeed);
         }
     }
 }

@@ -346,12 +346,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ca2427cbfd24ca44b242a6d61d779d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnHitEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDeathEvent:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &510000005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -368,21 +362,21 @@ MonoBehaviour:
   _groundAcceleration: 110
   _groundFriction: 5.5
   _groundStopSpeed: 1
-  _bhopSpeedMultiplier: 2.5
+  _bhopSpeedMultiplier: 1.65
   _timedJumpHorizontalRetention: 1
-  _autoJumpHorizontalRetention: 0.92
+  _autoJumpHorizontalRetention: 0.88
   _landingFrictionSkipFrames: 0
   _autoBhopWhenJumpHeld: 1
   _skipFrictionOnBufferedJump: 1
-  _airAcceleration: 72
-  _airControlResponsiveness: 7
+  _airAcceleration: 58
+  _airControlResponsiveness: 6
   _airWishSpeedMultiplier: 1
-  _forwardAirAccelerationScale: 0.45
-  _strafeAirAccelerationScale: 1.15
+  _forwardAirAccelerationScale: 0.7
+  _strafeAirAccelerationScale: 0.95
   _minimumSpeedForStrafeScaling: 7
-  _smallSteerBonusAngle: 6
-  _fullStrafeBonusAngle: 28
-  _lateralInputStrafeInfluence: 0.75
+  _smallSteerBonusAngle: 10
+  _fullStrafeBonusAngle: 38
+  _lateralInputStrafeInfluence: 0.45
   _jumpHeight: 2.35
   _gravity: 32
   _jumpBufferTime: 0.16
@@ -399,22 +393,40 @@ MonoBehaviour:
   _wallLayer:
     serializedVersion: 2
     m_Bits: 0
-  _wallCheckDistance: 0.75
+  _wallCheckDistance: 1.35
+  _wallCheckRadius: 0.22
   _wallCheckHeight: 1.05
-  _wallKickMinSpeed: 6.5
-  _wallKickCoyoteTime: 0.16
-  _wallKickDetachCooldown: 0.18
-  _wallContactVelocityTrim: 0.65
-  _wallSlideGravity: 14
-  _wallSlideMaxFallSpeed: 6
-  _wallKickHorizontalImpulse: 14
-  _wallKickForwardImpulse: 6
-  _wallKickForwardRetention: 0.45
-  _wallKickVerticalVelocity: 9
-  _wallKickSpeedCapMultiplier: 2.7
-  _maxAirWallKicks: 2
-  _requireNewWallForRepeatKick: 1
+  _wallKickMinSpeed: 0
+  _wallKickCoyoteTime: 0.22
+  _wallKickDetachCooldown: 0.55
+  _sameWallReattachCooldown: 0.75
+  _wallKickReturnControlDampingTime: 0.4
+  _wallKickReturnControlScale: 0
+  _wallRideAwaySpeedThreshold: 0.25
+  _wallContactVelocityTrim: 0.95
+  _wallRideGravity: 18
+  _wallRideMaxFallSpeed: 7
+  _wallRideMaxRiseSpeed: 1.5
+  _wallRideUpwardBrake: 70
+  _wallRideAcceleration: 42
+  _wallRideMaxSpeed: 13
+  _wallKickMinimumRideTime: 0.08
+  _wallKickHorizontalImpulse: 18
+  _wallKickForwardImpulse: 10
+  _wallKickForwardRetention: 0.75
+  _wallKickVerticalVelocity: 23.5
+  _wallKickMinimumExitSpeed: 24
+  _wallKickViewAssist: 0.25
+  _wallKickSpeedCapMultiplier: 3.6
+  _wallKickMomentumCapDuration: 0.35
+  _wallKickFeedbackTime: 0.2
+  _maxAirWallKicks: 0
+  _requireNewWallForRepeatKick: 0
   _sameWallNormalDotThreshold: 0.85
+  _useLowFrictionColliderMaterial: 1
+  _lateralContactMaxNormalY: 0.35
+  _lateralCollisionSlideStrength: 1
+  _lateralCollisionSlideGraceTime: 0.08
   _groundLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -433,7 +445,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 375a694738884ecd87540ecce6a6e839, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aimmingCompo: {fileID: 0}
   _maxChargingTime: 3
 --- !u!114 &510000007
 MonoBehaviour:
@@ -447,9 +458,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed1aca24b38a49d9a67df5ba7dddb700, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guideSpeed: 10
-  shortDashForce: 4
-  dashForce: 15
 --- !u!114 &510000008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -483,7 +491,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &510000101
 Transform:
   m_ObjectHideFlags: 0
@@ -629,8 +637,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: 16
     y: 16
-    width: 500
-    height: 360
+    width: 540
+    height: 420
 --- !u!114 &510000903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -649,6 +657,9 @@ MonoBehaviour:
   _disableLegacyRunway: 1
   _prototypeTexture: {fileID: 2800000, guid: 6c7c2090b7facea48a9bc7539f648f0d, type: 3}
   _textureTilesPerMeter: 0.25
+  _useLowFrictionCourseColliders: 1
+  _useSingleRunwayFloorCollision: 1
+  _disableGuideMarkerCollision: 1
   _startPosition: {x: 0, y: 1.05, z: 0}
   _finishPosition: {x: 0, y: 2, z: 260}
   _startSpeedThreshold: 1
@@ -665,7 +676,6 @@ GameObject:
   - component: {fileID: 1337798292}
   - component: {fileID: 1337798291}
   - component: {fileID: 1337798294}
-  - component: {fileID: 1337798295}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -759,6 +769,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa5667cb719c46dd9b026da225dcf6dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _movement: {fileID: 0}
   _target: {fileID: 510000001}
   _eyeHeight: 1.55
   _mouseSensitivity: 0.09
@@ -766,50 +777,11 @@ MonoBehaviour:
   _minPitch: -85
   _maxPitch: 85
   _lockCursorOnPlay: 1
---- !u!114 &1337798295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1337798290}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
-  m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
-  m_RequiresOpaqueTextureOption: 2
-  m_CameraType: 0
-  m_Cameras: []
-  m_RendererIndex: -1
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 0}
-  m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
-  m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
-  m_ClearDepth: 1
-  m_AllowXRRendering: 1
-  m_AllowHDROutput: 1
-  m_UseScreenCoordOverride: 0
-  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
-  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
-  m_RequiresDepthTexture: 0
-  m_RequiresColorTexture: 0
-  m_TaaSettings:
-    m_Quality: 3
-    m_FrameInfluence: 0.1
-    m_JitterScale: 1
-    m_MipBias: 0
-    m_VarianceClampScale: 0.9
-    m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
+  _strafeTiltAngle: 3.5
+  _wallRideTiltAngle: 8
+  _wallKickTiltPunchAngle: 5
+  _tiltSharpness: 12
+  _wallKickTiltSharpness: 18
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
