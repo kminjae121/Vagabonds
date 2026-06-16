@@ -1,8 +1,8 @@
-using _Code.EntityCompo.Move;
+using _Code.KDH.EntityCompo.Move;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace _Code.MovementTest
+namespace _Code.KDH.MovementTest
 {
     public class MovementTestDebugHud : MonoBehaviour
     {
@@ -81,11 +81,11 @@ namespace _Code.MovementTest
                    $"Wall Ride: {(_movement.IsWallRiding ? "On" : "--")} / Enter: {_movement.WallRideEnterCount} / Kick: {GetWallKickText()} / Count: {_movement.AirWallKickCount}\n" +
                    $"Wall Return Damping: {_movement.WallKickReturnDampingRemainingTime:0.00}s\n" +
                    $"Same Wall Dist Lock: {_movement.SameWallReattachDistanceRemaining:0.00}m\n" +
-                   $"Slide: {(_movement.IsSliding ? "On" : "--")} / Left: {_movement.SlideRemainingTime:0.00}s / Count: {_movement.SlideCount}\n" +
+                   $"Slide: {(_movement.IsSliding ? "On" : "--")} / Left: {_movement.SlideRemainingTime:0.00}s / Cam: {_movement.SlideCameraBlend:0.00} / Count: {_movement.SlideCount}\n" +
                    $"Last Hop: {_movement.LastConsumedHopMode} / Timed: {_movement.TimedHopCount} / Auto: {_movement.AutoRepeatHopCount}\n" +
                    $"Grounded: {_movement.IsGrounded}\n" +
                    $"Mouse: look / WASD: move\n" +
-                   $"Space tap: timed or wall kick / hold: auto / Ctrl: slide\n" +
+                   $"Space tap: timed, wall kick, or slide jump / hold: auto / Ctrl: slide\n" +
                    $"K: impulse / B: blood +1 / N: clear\n" +
                    $"R: reset course / Esc: cursor";
         }

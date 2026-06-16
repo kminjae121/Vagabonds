@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace _Code.EntityCompo.Move
+namespace _Code.KDH.EntityCompo.Move
 {
     internal static class MomentumModifier
     {

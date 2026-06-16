@@ -1,63 +1,62 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace _Code.EntityCompo.Enemy
 {
-
     public class EnemyAimed : MonoBehaviour
     {
-        public bool isAimmed { get; private set; } = false;
-        public bool isTarget { get; private set; } = false;
+        [SerializeField] private float _maxAimmingTime = 0.5f;
+
+        public bool isAimmed { get; private set; }
+        public bool isTarget { get; private set; }
         public UnityEvent OnAimmedThis;
+        public float aimmingTime;
 
-        private Coroutine aimmingFalseCoroutine;
+        private Coroutine _aimmingFalseCoroutine;
 
-
-        public float aimmingTime = 0;
-        private float _maxAimmingTime = 0.5f;
-        
         private void Update()
         {
-            if (isAimmed)
-            {
-                aimmingTime += Time.deltaTime;
+            if (!isAimmed)
+                return;
 
-                if (aimmingTime >= _maxAimmingTime)
-                {
-                    OnAimmedThis?.Invoke();
-                    aimmingTime = _maxAimmingTime;
-                    isTarget = true;
-                }
-            }
+            if (isTarget)
+                return;
+
+            aimmingTime += Time.deltaTime;
+            if (aimmingTime < _maxAimmingTime)
+                return;
+
+            OnAimmedThis?.Invoke();
+            aimmingTime = _maxAimmingTime;
+            isTarget = true;
         }
 
         public void AimmingThis()
         {
+            if (_aimmingFalseCoroutine != null)
+            {
+                StopCoroutine(_aimmingFalseCoroutine);
+                _aimmingFalseCoroutine = null;
+            }
+
             isAimmed = true;
-            
-            Debug.Log("에임 활설화");
         }
 
         public void StartCoroutineInScript()
         {
-            if (aimmingFalseCoroutine == null)
-            {
-                aimmingFalseCoroutine = StartCoroutine(AimmingFalse());
-            }
+            if (_aimmingFalseCoroutine == null)
+                _aimmingFalseCoroutine = StartCoroutine(AimmingFalse());
         }
-        
 
         public IEnumerator AimmingFalse()
         {
             yield return new WaitForSeconds(0.35f);
-        
+
             isAimmed = false;
-            aimmingTime = 0;
+            aimmingTime = 0f;
             isTarget = false;
-        
-            aimmingFalseCoroutine = null;
+            _aimmingFalseCoroutine = null;
         }
     }
 }

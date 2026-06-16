@@ -13,12 +13,12 @@ namespace _Code.Command
 
         public void Execute()
         {
-            _combatCompo.ChargingCompo?.Charging();
+            _combatCompo?.HandleAttackPressed();
         }
 
         public void ExecuteEnd()
         {
-            _combatCompo?.ForceAttack();
+            _combatCompo?.HandleAttackReleased();
         }
     }
 }

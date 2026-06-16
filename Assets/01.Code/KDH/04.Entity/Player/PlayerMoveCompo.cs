@@ -1,11 +1,13 @@
+using _Code.EntityCompo;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace _Code.EntityCompo.Move
+namespace _Code.KDH.EntityCompo.Move
 {
     public class PlayerMoveCompo : MonoBehaviour, IEntityComponent
     {
         private const int MaxLateralContactNormals = 4;
+        private const int MaxStandCheckHits = 8;
 
         public enum HopMode
         {
@@ -69,10 +71,11 @@ namespace _Code.EntityCompo.Move
         [SerializeField] private float _wallCheckHeight = 1.05f;
         [SerializeField] private float _wallKickMinSpeed = 0f;
         [SerializeField] private float _wallKickCoyoteTime = 0.22f;
-        [SerializeField] private float _wallKickDetachCooldown = 0.55f;
-        [SerializeField] private float _sameWallReattachCooldown = 0.75f;
-        [SerializeField] private float _sameWallReattachMinDistance = 2.25f;
-        [SerializeField] private float _sameWallReattachApproachSpeed = 0.8f;
+        [SerializeField] private float _wallKickDetachCooldown = 0f;
+        [FormerlySerializedAs("_sameWallReattachCooldown")]
+        [SerializeField] private float _sameWallReattachApproachCooldown;
+        [SerializeField] private float _sameWallReattachMinDistance = 0f;
+        [SerializeField] private float _sameWallReattachApproachSpeed = 0f;
         [SerializeField] private float _wallKickReturnControlDampingTime = 0.4f;
         [SerializeField, Range(0f, 1f)] private float _wallKickReturnControlScale = 0f;
         [SerializeField] private float _wallRideAwaySpeedThreshold = 0.25f;
@@ -99,15 +102,22 @@ namespace _Code.EntityCompo.Move
 
         [Header("8. Slide")]
         [SerializeField] private bool _enableSlide = true;
-        [SerializeField] private float _slideDuration = 0.55f;
-        [SerializeField] private float _slideCooldown = 0.25f;
-        [SerializeField] private float _slideMinStartSpeed = 7f;
-        [SerializeField] private float _slideStartBoost = 3f;
-        [SerializeField] private float _slideFriction = 1.25f;
-        [SerializeField] private float _slideSpeedCapMultiplier = 1.85f;
-        [SerializeField] private float _slideMomentumCapDuration = 0.25f;
-        [SerializeField] private float _slideSteerResponsiveness = 3.5f;
-        [SerializeField, Range(0f, 1f)] private float _slideInputControl = 0.35f;
+        [SerializeField] private float _slideDuration = 0.78f;
+        [SerializeField] private float _slideCooldown = 0.06f;
+        [SerializeField] private float _slideMinStartSpeed = 22f;
+        [SerializeField] private float _slideStartBoost = 16f;
+        [SerializeField] private float _slideFriction = 0.15f;
+        [SerializeField] private float _slideSpeedCapMultiplier = 3.4f;
+        [SerializeField] private float _slideMomentumCapDuration = 0.85f;
+        [SerializeField] private float _slideSteerResponsiveness = 4.5f;
+        [SerializeField, Range(0f, 1f)] private float _slideInputControl = 0.45f;
+        [SerializeField] private bool _resizeColliderWhileSliding;
+        [SerializeField] private float _slideColliderHeight = 1.15f;
+        [SerializeField] private float _slideColliderResizeSpeed = 16f;
+        [SerializeField] private float _slideStandCheckSkin = 0.03f;
+        [SerializeField] private bool _enableSlideJump = true;
+        [SerializeField, Range(0f, 1.2f)] private float _slideJumpHorizontalRetention = 1.05f;
+        [SerializeField] private float _slideJumpForwardBoost = 4.5f;
 
         [Header("9. Collision Smoothing")]
         [SerializeField] private bool _useLowFrictionColliderMaterial = true;
@@ -130,6 +140,13 @@ namespace _Code.EntityCompo.Move
         private float _ignoreGroundUntilTime = -999f;
         private float _combatMomentumCapUntilTime = -999f;
         private float _combatMomentumCapMultiplier = 1f;
+        private Vector3 _combatBurstDirection;
+        private float _combatBurstUntilTime = -999f;
+        private float _combatBurstSpeed;
+        private float _combatBurstVerticalLift;
+        private bool _combatBurstReplaceHorizontalVelocity;
+        private float _combatControlLockUntilTime = -999f;
+        private float _combatControlScale = 1f;
         private int _frictionSkipFrames;
         private int _bloodStacks;
         private HopMode _pendingHopMode;
@@ -149,7 +166,10 @@ namespace _Code.EntityCompo.Move
         private float _nextSlideTime = -999f;
         private float _slideMomentumCapUntilTime = -999f;
         private readonly Vector3[] _lateralContactNormals = new Vector3[MaxLateralContactNormals];
+        private readonly Collider[] _standCheckHits = new Collider[MaxStandCheckHits];
         private PhysicsMaterial _lowFrictionMaterial;
+        private Vector3 _defaultCapsuleCenter;
+        private float _defaultCapsuleHeight;
         private float _lastLateralContactTime = -999f;
         private int _lateralContactCount;
         private int _airWallKickCount;
@@ -186,6 +206,7 @@ namespace _Code.EntityCompo.Move
             : 0f;
         public float SameWallReattachDistanceRemaining => GetSameWallReattachDistanceRemaining();
         public float SlideRemainingTime => IsSlideActive() ? Mathf.Max(0f, _slideEndTime - Time.time) : 0f;
+        public float SlideCameraBlend => Mathf.Max(GetTimedSlideCameraBlend(), GetSlideColliderBlend());
         public int AirWallKickCount => _airWallKickCount;
         public int TimedHopCount => _timedHopCount;
         public int AutoRepeatHopCount => _autoRepeatHopCount;
@@ -222,7 +243,13 @@ namespace _Code.EntityCompo.Move
             _rbCompo.solverIterations = Mathf.Max(_rbCompo.solverIterations, 10);
             _rbCompo.solverVelocityIterations = Mathf.Max(_rbCompo.solverVelocityIterations, 10);
 
+            CacheCapsuleDefaults();
             ApplyLowFrictionColliderMaterial();
+        }
+
+        private void OnDisable()
+        {
+            RestoreCapsuleCollider();
         }
 
         private void OnValidate()
@@ -259,7 +286,7 @@ namespace _Code.EntityCompo.Move
             _wallKickMinSpeed = Mathf.Max(0f, _wallKickMinSpeed);
             _wallKickCoyoteTime = Mathf.Max(0f, _wallKickCoyoteTime);
             _wallKickDetachCooldown = Mathf.Max(0f, _wallKickDetachCooldown);
-            _sameWallReattachCooldown = Mathf.Max(0f, _sameWallReattachCooldown);
+            _sameWallReattachApproachCooldown = Mathf.Max(0f, _sameWallReattachApproachCooldown);
             _sameWallReattachMinDistance = Mathf.Max(0f, _sameWallReattachMinDistance);
             _sameWallReattachApproachSpeed = Mathf.Max(0f, _sameWallReattachApproachSpeed);
             _wallKickReturnControlDampingTime = Mathf.Max(0f, _wallKickReturnControlDampingTime);
@@ -292,6 +319,11 @@ namespace _Code.EntityCompo.Move
             _slideMomentumCapDuration = Mathf.Max(0f, _slideMomentumCapDuration);
             _slideSteerResponsiveness = Mathf.Max(0f, _slideSteerResponsiveness);
             _slideInputControl = Mathf.Clamp01(_slideInputControl);
+            _slideColliderHeight = Mathf.Max(0.1f, _slideColliderHeight);
+            _slideColliderResizeSpeed = Mathf.Max(0.01f, _slideColliderResizeSpeed);
+            _slideStandCheckSkin = Mathf.Max(0f, _slideStandCheckSkin);
+            _slideJumpHorizontalRetention = Mathf.Clamp(_slideJumpHorizontalRetention, 0f, 1.2f);
+            _slideJumpForwardBoost = Mathf.Max(0f, _slideJumpForwardBoost);
             _lateralContactMaxNormalY = Mathf.Clamp01(_lateralContactMaxNormalY);
             _lateralCollisionSlideStrength = Mathf.Clamp01(_lateralCollisionSlideStrength);
             _lateralCollisionSlideGraceTime = Mathf.Max(0f, _lateralCollisionSlideGraceTime);
@@ -368,6 +400,10 @@ namespace _Code.EntityCompo.Move
             _slideEndTime = -999f;
             _nextSlideTime = -999f;
             _slideMomentumCapUntilTime = -999f;
+            _combatBurstUntilTime = -999f;
+            _combatControlLockUntilTime = -999f;
+            _combatControlScale = 1f;
+            RestoreCapsuleCollider();
         }
 
         public void ApplyKillImpulse(Vector3 direction, int killCount = 1)
@@ -390,6 +426,53 @@ namespace _Code.EntityCompo.Move
                 _killImpulseVerticalLift,
                 _multiKillImpulseMultiplier,
                 GetCurrentHorizontalSpeedCap());
+        }
+
+        public void ApplyCombatBurst(
+            Vector3 direction,
+            float horizontalSpeed,
+            float verticalLift = 0f,
+            float capMultiplier = 0f,
+            float capDuration = 0f,
+            bool replaceHorizontalVelocity = true,
+            float controlLockDuration = 0f,
+            float controlScale = 1f)
+        {
+            if (_rbCompo == null || horizontalSpeed <= 0f)
+                return;
+
+            Vector3 burstDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
+            if (burstDirection.sqrMagnitude <= Mathf.Epsilon && _entity != null)
+                burstDirection = _entity.transform.forward;
+
+            if (burstDirection.sqrMagnitude <= Mathf.Epsilon)
+                return;
+
+            burstDirection.Normalize();
+
+            float effectiveCapMultiplier = capMultiplier > 0f
+                ? Mathf.Max(_bhopSpeedMultiplier, capMultiplier)
+                : _combatMomentumSpeedCapMultiplier;
+            float effectiveCapDuration = capDuration > 0f ? capDuration : _combatMomentumCapDuration;
+            ActivateCombatMomentumCap(effectiveCapMultiplier, effectiveCapDuration);
+
+            _combatBurstDirection = burstDirection;
+            _combatBurstSpeed = horizontalSpeed;
+            _combatBurstVerticalLift = verticalLift;
+            _combatBurstReplaceHorizontalVelocity = replaceHorizontalVelocity;
+            _combatBurstUntilTime = Time.time + Mathf.Max(Time.fixedDeltaTime * 2f, 0.06f);
+            ApplyCombatControlLock(controlLockDuration, controlScale);
+
+            Vector3 velocity = _rbCompo.linearVelocity;
+            Vector3 horizontalVelocity = replaceHorizontalVelocity
+                ? burstDirection * horizontalSpeed
+                : GetHorizontalVelocity(velocity) + burstDirection * horizontalSpeed;
+            horizontalVelocity = ClampHorizontalSpeed(horizontalVelocity, GetEffectiveBaseSpeed() * effectiveCapMultiplier);
+
+            velocity.x = horizontalVelocity.x;
+            velocity.z = horizontalVelocity.z;
+            velocity.y = Mathf.Max(velocity.y, verticalLift);
+            _rbCompo.linearVelocity = velocity;
         }
 
         private void OnCollisionStay(Collision collision)
@@ -459,9 +542,10 @@ namespace _Code.EntityCompo.Move
                 }
                 else
                 {
-                    float airAcceleration = _airAcceleration * GetAirAccelerationScale(horizontalVelocity, wishDirection) * wishControlScale;
+                    float airControlScale = wishControlScale * GetCombatControlScale();
+                    float airAcceleration = _airAcceleration * GetAirAccelerationScale(horizontalVelocity, wishDirection) * airControlScale;
                     horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed * _airWishSpeedMultiplier, airAcceleration, deltaTime);
-                    horizontalVelocity = ApplyAirControl(horizontalVelocity, wishDirection, deltaTime, wishControlScale);
+                    horizontalVelocity = ApplyAirControl(horizontalVelocity, wishDirection, deltaTime, airControlScale);
                     verticalVelocity -= _gravity * deltaTime;
                 }
             }
@@ -472,9 +556,12 @@ namespace _Code.EntityCompo.Move
             }
             else if (CanConsumeJump())
             {
+                bool wasSliding = IsSlideActive();
                 _lastConsumedHopMode = _pendingHopMode;
                 RegisterConsumedHop(_lastConsumedHopMode);
                 horizontalVelocity = ApplyJumpMomentumRetention(horizontalVelocity, _pendingHopMode);
+                if (wasSliding)
+                    horizontalVelocity = ApplySlideJumpMomentum(horizontalVelocity);
                 verticalVelocity = Mathf.Sqrt(2f * _gravity * _jumpHeight);
                 _lastJumpRequestTime = -999f;
                 _lastGroundedTime = -999f;
@@ -486,6 +573,8 @@ namespace _Code.EntityCompo.Move
                 UpdateWallContactState(horizontalVelocity);
             }
 
+            ApplyActiveCombatBurst(ref horizontalVelocity, ref verticalVelocity);
+            UpdateSlideCollider(deltaTime);
             horizontalVelocity = ApplyLateralCollisionSlide(horizontalVelocity);
             horizontalVelocity = ClampHorizontalSpeed(horizontalVelocity, GetCurrentHorizontalSpeedCap());
             _rbCompo.linearVelocity = new Vector3(horizontalVelocity.x, verticalVelocity, horizontalVelocity.z);
@@ -548,6 +637,7 @@ namespace _Code.EntityCompo.Move
             _slideMomentumCapUntilTime = Time.time + _slideDuration + _slideMomentumCapDuration;
             _slideCount++;
             _frictionSkipFrames = 0;
+            SetSlideColliderImmediate(true);
         }
 
         private Vector3 ApplySlideMovement(Vector3 horizontalVelocity, Vector3 wishDirection, float deltaTime)
@@ -582,6 +672,41 @@ namespace _Code.EntityCompo.Move
         private bool IsSlideActive()
         {
             return _enableSlide && _isGrounded && Time.time < _slideEndTime;
+        }
+
+        private float GetTimedSlideCameraBlend()
+        {
+            if (!_enableSlide || Time.time >= _slideEndTime)
+                return 0f;
+
+            float elapsed = Mathf.Max(0f, _slideDuration - (_slideEndTime - Time.time));
+            float enterBlend = Mathf.Clamp01(elapsed / 0.1f);
+            float exitBlend = Mathf.Clamp01((_slideEndTime - Time.time) / 0.18f);
+            return Mathf.Min(enterBlend, exitBlend);
+        }
+
+        private float GetSlideColliderBlend()
+        {
+            if (!_resizeColliderWhileSliding || _capsuleCollider == null || _defaultCapsuleHeight <= 0f)
+                return 0f;
+
+            float slideHeight = Mathf.Min(_slideColliderHeight, _defaultCapsuleHeight);
+            float heightRange = Mathf.Max(0.01f, _defaultCapsuleHeight - slideHeight);
+            return Mathf.Clamp01((_defaultCapsuleHeight - _capsuleCollider.height) / heightRange);
+        }
+
+        private Vector3 ApplySlideJumpMomentum(Vector3 horizontalVelocity)
+        {
+            if (!_enableSlideJump)
+                return horizontalVelocity;
+
+            Vector3 jumpDirection = _slideDirection.sqrMagnitude > Mathf.Epsilon
+                ? _slideDirection.normalized
+                : GetSlideStartDirection(horizontalVelocity, GetWishDirection());
+
+            horizontalVelocity *= _slideJumpHorizontalRetention;
+            horizontalVelocity += jumpDirection * _slideJumpForwardBoost;
+            return horizontalVelocity;
         }
 
         private Vector3 GetWishDirection()
@@ -885,7 +1010,7 @@ namespace _Code.EntityCompo.Move
             _lastWallKickPosition = _entity.transform.position;
             _lastWallKickTime = Time.time;
             _wallKickMomentumCapUntilTime = Mathf.Max(_wallKickMomentumCapUntilTime, Time.time + _wallKickMomentumCapDuration);
-            _sameWallReattachLockedUntilTime = Mathf.Max(_sameWallReattachLockedUntilTime, Time.time + _sameWallReattachCooldown);
+            _sameWallReattachLockedUntilTime = Mathf.Max(_sameWallReattachLockedUntilTime, Time.time + _sameWallReattachApproachCooldown);
             _airWallKickCount++;
             ClearWallTouch();
             _lastJumpRequestTime = -999f;
@@ -925,6 +1050,168 @@ namespace _Code.EntityCompo.Move
 
             _wallNormal = Vector3.zero;
             _wallForward = Vector3.zero;
+        }
+
+        private void CacheCapsuleDefaults()
+        {
+            if (_capsuleCollider == null)
+                return;
+
+            _defaultCapsuleHeight = _capsuleCollider.height;
+            _defaultCapsuleCenter = _capsuleCollider.center;
+        }
+
+        private void UpdateSlideCollider(float deltaTime)
+        {
+            if (_capsuleCollider == null || _defaultCapsuleHeight <= 0f)
+                return;
+
+            if (!_resizeColliderWhileSliding)
+            {
+                RestoreCapsuleCollider();
+                return;
+            }
+
+            bool wantsLowCollider = IsSlideActive();
+            if (!wantsLowCollider && !CanUseCapsuleDimensions(_defaultCapsuleHeight, _defaultCapsuleCenter))
+                wantsLowCollider = true;
+
+            float targetHeight = wantsLowCollider
+                ? Mathf.Min(_slideColliderHeight, _defaultCapsuleHeight)
+                : _defaultCapsuleHeight;
+            Vector3 targetCenter = wantsLowCollider
+                ? GetCapsuleCenterForHeight(targetHeight)
+                : _defaultCapsuleCenter;
+
+            float nextHeight = Mathf.MoveTowards(
+                _capsuleCollider.height,
+                targetHeight,
+                _slideColliderResizeSpeed * deltaTime);
+
+            float blend = 1f - Mathf.Exp(-_slideColliderResizeSpeed * deltaTime);
+            Vector3 nextCenter = Vector3.Lerp(_capsuleCollider.center, targetCenter, blend);
+            ApplyCapsuleDimensions(nextHeight, nextCenter);
+        }
+
+        private void SetSlideColliderImmediate(bool isSliding)
+        {
+            if (_capsuleCollider == null || _defaultCapsuleHeight <= 0f)
+                return;
+
+            if (!_resizeColliderWhileSliding)
+            {
+                RestoreCapsuleCollider();
+                return;
+            }
+
+            float targetHeight = isSliding
+                ? Mathf.Min(_slideColliderHeight, _defaultCapsuleHeight)
+                : _defaultCapsuleHeight;
+            Vector3 targetCenter = isSliding
+                ? GetCapsuleCenterForHeight(targetHeight)
+                : _defaultCapsuleCenter;
+
+            ApplyCapsuleDimensions(targetHeight, targetCenter);
+        }
+
+        private void RestoreCapsuleCollider()
+        {
+            if (_capsuleCollider == null || _defaultCapsuleHeight <= 0f)
+                return;
+
+            ApplyCapsuleDimensions(_defaultCapsuleHeight, _defaultCapsuleCenter);
+        }
+
+        private void ApplyActiveCombatBurst(ref Vector3 horizontalVelocity, ref float verticalVelocity)
+        {
+            if (Time.time > _combatBurstUntilTime || _combatBurstDirection.sqrMagnitude <= Mathf.Epsilon || _combatBurstSpeed <= 0f)
+                return;
+
+            Vector3 burstVelocity = _combatBurstDirection.normalized * _combatBurstSpeed;
+            horizontalVelocity = _combatBurstReplaceHorizontalVelocity
+                ? burstVelocity
+                : horizontalVelocity + burstVelocity;
+            verticalVelocity = Mathf.Max(verticalVelocity, _combatBurstVerticalLift);
+        }
+
+        private void ApplyCombatControlLock(float duration, float scale)
+        {
+            if (duration <= 0f)
+                return;
+
+            _combatControlScale = Mathf.Clamp01(scale);
+            _combatControlLockUntilTime = Mathf.Max(_combatControlLockUntilTime, Time.time + duration);
+        }
+
+        private float GetCombatControlScale()
+        {
+            if (Time.time <= _combatControlLockUntilTime)
+                return _combatControlScale;
+
+            _combatControlScale = 1f;
+            return 1f;
+        }
+
+        private void ApplyCapsuleDimensions(float height, Vector3 center)
+        {
+            _capsuleCollider.height = height;
+            _capsuleCollider.center = center;
+        }
+
+        private Vector3 GetCapsuleCenterForHeight(float height)
+        {
+            float originalBottom = _defaultCapsuleCenter.y - _defaultCapsuleHeight * 0.5f;
+            Vector3 center = _defaultCapsuleCenter;
+            center.y = originalBottom + height * 0.5f;
+            return center;
+        }
+
+        private bool CanUseCapsuleDimensions(float height, Vector3 center)
+        {
+            if (_capsuleCollider == null)
+                return true;
+
+            Vector3 scale = _capsuleCollider.transform.lossyScale;
+            float radiusScale = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+            float radius = Mathf.Max(0.01f, _capsuleCollider.radius * radiusScale - _slideStandCheckSkin);
+            float worldHeight = Mathf.Max(height * Mathf.Abs(scale.y), radius * 2f);
+            float halfSegment = Mathf.Max(0f, worldHeight * 0.5f - radius);
+            Vector3 worldCenter = _capsuleCollider.transform.TransformPoint(center);
+            Vector3 axis = _capsuleCollider.transform.up;
+            Vector3 pointA = worldCenter + axis * halfSegment;
+            Vector3 pointB = worldCenter - axis * halfSegment;
+
+            int hitCount = Physics.OverlapCapsuleNonAlloc(
+                pointA,
+                pointB,
+                radius,
+                _standCheckHits,
+                Physics.DefaultRaycastLayers,
+                QueryTriggerInteraction.Ignore);
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider hit = _standCheckHits[i];
+                if (IsOwnCollider(hit))
+                    continue;
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool IsOwnCollider(Collider hit)
+        {
+            Transform ownerRoot = _entity != null ? _entity.transform : transform;
+            return hit == null
+                   || hit == _capsuleCollider
+                   || hit.transform == _capsuleCollider.transform
+                   || hit.transform.IsChildOf(_capsuleCollider.transform)
+                   || _capsuleCollider.transform.IsChildOf(hit.transform)
+                   || hit.transform == ownerRoot
+                   || hit.transform.IsChildOf(ownerRoot)
+                   || ownerRoot.IsChildOf(hit.transform);
         }
 
         private Vector3 GetGroundCheckOrigin(out float radius)
@@ -1078,8 +1365,13 @@ namespace _Code.EntityCompo.Move
 
         private void ActivateCombatMomentumCap()
         {
-            _combatMomentumCapMultiplier = Mathf.Max(_combatMomentumCapMultiplier, _combatMomentumSpeedCapMultiplier);
-            _combatMomentumCapUntilTime = Mathf.Max(_combatMomentumCapUntilTime, Time.time + _combatMomentumCapDuration);
+            ActivateCombatMomentumCap(_combatMomentumSpeedCapMultiplier, _combatMomentumCapDuration);
+        }
+
+        private void ActivateCombatMomentumCap(float capMultiplier, float capDuration)
+        {
+            _combatMomentumCapMultiplier = Mathf.Max(_combatMomentumCapMultiplier, capMultiplier);
+            _combatMomentumCapUntilTime = Mathf.Max(_combatMomentumCapUntilTime, Time.time + capDuration);
         }
 
         private float GetEffectiveBaseSpeed()

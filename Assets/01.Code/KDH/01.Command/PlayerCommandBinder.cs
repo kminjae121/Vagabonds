@@ -1,9 +1,10 @@
+using _Code.Command;
 using _Code.EntityCompo.Combat;
-using _Code.EntityCompo.Move;
+using _Code.KDH.EntityCompo.Move;
 using UnityEngine;
 using PlayerInput = _00.CORE._02.Scripts.Input.PlayerInput;
 
-namespace _Code.Command
+namespace _Code.KDH.Command
 {
     public class PlayerCommandBinder : MonoBehaviour
     {
@@ -11,14 +12,10 @@ namespace _Code.Command
         [SerializeField] private PlayerMoveCompo movement;
         [SerializeField] private PlayerCombatCompo combat;
 
-        private MoveCommand _moveCommand;
-        private JumpCommand _jumpCommand;
         private AttackCommand _attackCommand;
 
         private void Awake()
         {
-            _moveCommand = new MoveCommand(movement);
-            _jumpCommand = new JumpCommand(movement);
             _attackCommand = new AttackCommand(combat);
         }
 
@@ -31,9 +28,9 @@ namespace _Code.Command
                 return;
             }
 
-            inputReader.MoveEvent += _moveCommand.Execute;
-            inputReader.JumpKeyEvent += _jumpCommand.Execute;
-            inputReader.SlidingEvent += movement.SetSlideHeld;
+            inputReader.MoveEvent += OnMove;
+            inputReader.JumpKeyEvent += OnJump;
+            inputReader.SlidingEvent += OnSlide;
             inputReader.ChargingEvent += _attackCommand.Execute;
             inputReader.ChargingAttackEvent += _attackCommand.ExecuteEnd;
         }
@@ -49,11 +46,29 @@ namespace _Code.Command
             if (inputReader == null)
                 return;
 
-            inputReader.MoveEvent -= _moveCommand.Execute;
-            inputReader.JumpKeyEvent -= _jumpCommand.Execute;
-            inputReader.SlidingEvent -= movement.SetSlideHeld;
+            inputReader.MoveEvent -= OnMove;
+            inputReader.JumpKeyEvent -= OnJump;
+            inputReader.SlidingEvent -= OnSlide;
             inputReader.ChargingEvent -= _attackCommand.Execute;
             inputReader.ChargingAttackEvent -= _attackCommand.ExecuteEnd;
+        }
+
+        private void OnMove(Vector2 moveInput)
+        {
+            if (movement != null)
+                movement.SetMove(moveInput);
+        }
+
+        private void OnJump()
+        {
+            if (movement != null)
+                movement.Jump();
+        }
+
+        private void OnSlide(bool isHeld)
+        {
+            if (movement != null)
+                movement.SetSlideHeld(isHeld);
         }
     }
 }
