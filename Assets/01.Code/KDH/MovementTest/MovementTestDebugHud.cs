@@ -1,0 +1,112 @@
+using _Code.KDH.EntityCompo.Move;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace _Code.KDH.MovementTest
+{
+    public class MovementTestDebugHud : MonoBehaviour
+    {
+        [SerializeField] private PlayerMoveCompo _movement;
+        [SerializeField] private MovementTestCourseController _course;
+        [SerializeField] private bool _enableDebugShortcuts = true;
+        [SerializeField] private Rect _rect = new(16f, 16f, 560f, 470f);
+
+        private GUIStyle _style;
+
+        private void Awake()
+        {
+            if (_movement == null)
+                _movement = FindFirstObjectByType<PlayerMoveCompo>();
+
+            if (_course == null)
+                _course = FindFirstObjectByType<MovementTestCourseController>();
+        }
+
+        private void Update()
+        {
+            if (!_enableDebugShortcuts || _movement == null || Keyboard.current == null)
+                return;
+
+            if (Keyboard.current.bKey.wasPressedThisFrame)
+                _movement.AddBloodStacks();
+
+            if (Keyboard.current.nKey.wasPressedThisFrame)
+                _movement.ClearBloodStacks();
+
+            if (Keyboard.current.kKey.wasPressedThisFrame)
+            {
+                Vector3 direction = Camera.main != null
+                    ? Camera.main.transform.forward
+                    : _movement.transform.forward;
+
+                _movement.ApplyKillImpulse(direction);
+            }
+        }
+
+        private void OnGUI()
+        {
+            if (_style == null)
+            {
+                _style = new GUIStyle(GUI.skin.box)
+                {
+                    alignment = TextAnchor.UpperLeft,
+                    fontSize = 18,
+                    padding = new RectOffset(12, 12, 10, 10)
+                };
+
+                _style.normal.textColor = Color.white;
+            }
+
+            string text = _movement == null
+                ? "MovementTest\nPlayerMoveCompo not found."
+                : BuildHudText();
+
+            GUI.Box(_rect, text, _style);
+        }
+
+        private string BuildHudText()
+        {
+            string courseText = _course == null
+                ? "Course: not found\n"
+                : $"Time: {_course.ElapsedTime:00.00}s / Finish: {(_course.IsFinished ? $"{_course.FinishTime:00.00}s" : "--")}\n" +
+                  $"Max: {_course.MaxSpeed:00.00} / Avg: {_course.AverageSpeed:00.00} / Dist: {_course.DistanceTravelled:000.0}m\n" +
+                  $"Run: {GetRunStateText()}\n";
+
+            return $"MovementTest Course\n" +
+                   courseText +
+                   $"Speed: {_movement.CurrentHorizontalSpeed:00.00}\n" +
+                   $"Base: {_movement.EffectiveMaxSpeed:00.00} / Cap: {_movement.CurrentSpeedCap:00.00}\n" +
+                   $"Blood: {_movement.BloodStacks} ({_movement.BloodSpeedMultiplier:0.00}x)\n" +
+                   $"Combat Boost: {_movement.CombatMomentumRemainingTime:0.00}s\n" +
+                   $"Wall Ride: {(_movement.IsWallRiding ? "On" : "--")} / Enter: {_movement.WallRideEnterCount} / Kick: {GetWallKickText()} / Count: {_movement.AirWallKickCount}\n" +
+                   $"Wall Return Damping: {_movement.WallKickReturnDampingRemainingTime:0.00}s\n" +
+                   $"Same Wall Dist Lock: {_movement.SameWallReattachDistanceRemaining:0.00}m\n" +
+                   $"Slide: {(_movement.IsSliding ? "On" : "--")} / Left: {_movement.SlideRemainingTime:0.00}s / Cam: {_movement.SlideCameraBlend:0.00} / Count: {_movement.SlideCount}\n" +
+                   $"Last Hop: {_movement.LastConsumedHopMode} / Timed: {_movement.TimedHopCount} / Auto: {_movement.AutoRepeatHopCount}\n" +
+                   $"Grounded: {_movement.IsGrounded}\n" +
+                   $"Mouse: look / WASD: move\n" +
+                   $"Space tap: timed, wall kick, or slide jump / hold: auto / Ctrl: slide\n" +
+                   $"K: impulse / B: blood +1 / N: clear\n" +
+                   $"R: reset course / Esc: cursor";
+        }
+
+        private string GetWallKickText()
+        {
+            if (_movement.WallKickFeedbackRemainingTime > 0f)
+                return "KICK!";
+
+            return _movement.IsWallKickReady ? "Ready" : "--";
+        }
+
+        private string GetRunStateText()
+        {
+            if (_course == null)
+                return "Unknown";
+
+            if (_course.IsFinished)
+                return "Finished";
+
+            return _course.HasStarted ? "Running" : "Ready";
+        }
+    }
+}

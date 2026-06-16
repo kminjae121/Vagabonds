@@ -2,6 +2,7 @@
 using _01.Member.KMJ._02.Scripts._01.Player.AttackCompo;
 using _Code.EntityCompo;
 using _Code.EntityCompo.Combat;
+using Code.Core.Events.Bus;
 using Code.Core.Stats;
 using Code.Interfaces;
 using UnityEngine;
@@ -14,6 +15,9 @@ namespace Code.Entities
         [SerializeField] private StatSO hpStat;
         [SerializeField] private float maxHealth;
         [SerializeField] private float currentHealth;
+        [SerializeField] private bool _raiseHitStopOnDeath = true;
+        [SerializeField] private float _deathHitStopDuration = 0.06f;
+        [SerializeField, Range(0f, 1f)] private float _deathHitStopTimeScale = 0f;
 
         public float CurrentHealth => currentHealth;
         public float MaxHealth => maxHealth;
@@ -37,28 +41,44 @@ namespace Code.Entities
         
         public void AfterInitialize()
         {
-            maxHealth = currentHealth = _statCompo.GetStat(hpStat).Value;
+            if (_statCompo != null && hpStat != null)
+                maxHealth = _statCompo.GetStat(hpStat).Value;
+
+            maxHealth = Mathf.Max(1f, maxHealth);
+            currentHealth = maxHealth;
         }
 
-        public void ApplyDamage(DamageData damageData, Vector3 hitPoint, Vector3 hitNormal, AttackDataSO attackData, Entity dealer)
+        public DamageResult ApplyDamage(DamageData damageData, Vector3 hitPoint, Vector3 hitNormal, AttackDataSO attackData, Entity dealer)
         {
-            if (_entity.IsDead)
-                return;
-            
-            _actionData.HitNormal = hitNormal;
-            _actionData.HitPoint = hitPoint;
-            _actionData.HitByPowerAttack = attackData.isPowerAttack;
-            _actionData.LastDamageData = damageData; 
+            if (_entity != null && _entity.IsDead)
+                return DamageResult.NotApplied;
+
+            if (_actionData != null)
+            {
+                _actionData.HitNormal = hitNormal;
+                _actionData.HitPoint = hitPoint;
+                _actionData.HitByPowerAttack = attackData != null && attackData.isPowerAttack;
+                _actionData.LastDamageData = damageData;
+            }
 
             currentHealth = Mathf.Clamp(currentHealth - damageData.damage, 0, maxHealth);
 
             OnHealthChangedEvent?.Invoke(currentHealth, maxHealth);
-            
-            if (currentHealth <= 0)
-                _entity.OnDeathEvent?.Invoke();
 
             OnMinusHealthEvent?.Invoke();
-            _entity.OnHitEvent?.Invoke();
+            _entity?.OnHitEvent?.Invoke();
+
+            if (currentHealth > 0)
+                return new DamageResult(true, false, _entity);
+
+            if (_entity != null)
+                _entity.IsDead = true;
+
+            if (_raiseHitStopOnDeath)
+                Bus<HitStopEvent>.Raise(new HitStopEvent(_deathHitStopDuration, _deathHitStopTimeScale));
+
+            _entity?.OnDeathEvent?.Invoke();
+            return new DamageResult(true, true, _entity);
         }
     }
 }

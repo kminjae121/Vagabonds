@@ -41,7 +41,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 92679347101672276}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
   m_Name: 
@@ -108,11 +108,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 92679347101672276}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa5667cb719c46dd9b026da225dcf6dc, type: 3}
+  m_Script: {fileID: 11500000, guid: f5b7d67b1c6b4c0c9f5b1de8f08d6d22, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_Code.MovementTest.MovementTestCameraFollow
+  m_EditorClassIdentifier: Assembly-CSharp::_Code.KDH.MovementTest.MovementTestCameraFollow
   _movement: {fileID: 8447620937663004360}
   _target: {fileID: 0}
   _eyeHeight: 0.67
@@ -126,6 +126,18 @@ MonoBehaviour:
   _wallKickTiltPunchAngle: 5
   _tiltSharpness: 12
   _wallKickTiltSharpness: 18
+  _slideEyeHeightDrop: 0.42
+  _slidePitchKickAngle: 4
+  _slideTiltAngle: 4
+  _slideFovKick: 4.5
+  _slideCameraEnterSharpness: 18
+  _slideCameraExitSharpness: 6
+  _speedFovKick: 0
+  _fovSharpness: 5.5
+  _maxFovChangePerSecond: 18
+  _smoothVerticalFollow: 0
+  _verticalFollowSharpness: 14
+  _verticalSnapDistance: 4
 --- !u!1 &424128341273267017
 GameObject:
   m_ObjectHideFlags: 0
@@ -706,28 +718,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 5997120367025449195}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a3b65d35a3c49358a0fd39520f1dae0, type: 3}
+  m_Script: {fileID: 11500000, guid: a2e5b1e7213844d68f5a28a9c64279c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _baseMaxSpeed: 10.5
   _groundAcceleration: 110
   _groundFriction: 5.5
   _groundStopSpeed: 1
-  _bhopSpeedMultiplier: 2.5
+  _bhopSpeedMultiplier: 1.65
   _timedJumpHorizontalRetention: 1
-  _autoJumpHorizontalRetention: 0.92
+  _autoJumpHorizontalRetention: 0.88
   _landingFrictionSkipFrames: 0
   _autoBhopWhenJumpHeld: 1
   _skipFrictionOnBufferedJump: 1
-  _airAcceleration: 72
-  _airControlResponsiveness: 7
+  _airAcceleration: 58
+  _airControlResponsiveness: 6
   _airWishSpeedMultiplier: 1
-  _forwardAirAccelerationScale: 0.45
-  _strafeAirAccelerationScale: 1.15
+  _forwardAirAccelerationScale: 0.7
+  _strafeAirAccelerationScale: 0.95
   _minimumSpeedForStrafeScaling: 7
-  _smallSteerBonusAngle: 6
-  _fullStrafeBonusAngle: 28
-  _lateralInputStrafeInfluence: 0.75
+  _smallSteerBonusAngle: 10
+  _fullStrafeBonusAngle: 38
+  _lateralInputStrafeInfluence: 0.45
   _jumpHeight: 2.35
   _gravity: 32
   _jumpBufferTime: 0.16
@@ -744,17 +756,19 @@ MonoBehaviour:
   _wallLayer:
     serializedVersion: 2
     m_Bits: 0
-  _wallCheckDistance: 0.75
+  _wallCheckDistance: 1.35
   _wallCheckRadius: 0.22
   _wallCheckHeight: 1.05
-  _wallKickMinSpeed: 6.5
-  _wallKickCoyoteTime: 0.16
-  _wallKickDetachCooldown: 0.18
-  _sameWallReattachCooldown: 0.75
+  _wallKickMinSpeed: 0
+  _wallKickCoyoteTime: 0.22
+  _wallKickDetachCooldown: 0
+  _sameWallReattachApproachCooldown: 0
+  _sameWallReattachMinDistance: 0
+  _sameWallReattachApproachSpeed: 0
   _wallKickReturnControlDampingTime: 0.4
   _wallKickReturnControlScale: 0
   _wallRideAwaySpeedThreshold: 0.25
-  _wallContactVelocityTrim: 0.65
+  _wallContactVelocityTrim: 0.95
   _wallRideGravity: 18
   _wallRideMaxFallSpeed: 7
   _wallRideMaxRiseSpeed: 1.5
@@ -762,18 +776,35 @@ MonoBehaviour:
   _wallRideAcceleration: 42
   _wallRideMaxSpeed: 13
   _wallKickMinimumRideTime: 0.08
-  _wallKickHorizontalImpulse: 14
-  _wallKickForwardImpulse: 6
-  _wallKickForwardRetention: 0.45
-  _wallKickVerticalVelocity: 9
+  _wallKickHorizontalImpulse: 18
+  _wallKickForwardImpulse: 10
+  _wallKickForwardRetention: 0.75
+  _wallKickVerticalVelocity: 23.5
   _wallKickMinimumExitSpeed: 24
   _wallKickViewAssist: 0.25
-  _wallKickSpeedCapMultiplier: 2.7
+  _wallKickSpeedCapMultiplier: 3.6
   _wallKickMomentumCapDuration: 0.35
   _wallKickFeedbackTime: 0.2
-  _maxAirWallKicks: 2
-  _requireNewWallForRepeatKick: 1
+  _maxAirWallKicks: 0
+  _requireNewWallForRepeatKick: 0
   _sameWallNormalDotThreshold: 0.85
+  _enableSlide: 1
+  _slideDuration: 0.78
+  _slideCooldown: 0.06
+  _slideMinStartSpeed: 22
+  _slideStartBoost: 16
+  _slideFriction: 0.15
+  _slideSpeedCapMultiplier: 3.4
+  _slideMomentumCapDuration: 0.85
+  _slideSteerResponsiveness: 4.5
+  _slideInputControl: 0.45
+  _resizeColliderWhileSliding: 0
+  _slideColliderHeight: 1.15
+  _slideColliderResizeSpeed: 16
+  _slideStandCheckSkin: 0.03
+  _enableSlideJump: 1
+  _slideJumpHorizontalRetention: 1.05
+  _slideJumpForwardBoost: 4.5
   _useLowFrictionColliderMaterial: 1
   _lateralContactMaxNormalY: 0.35
   _lateralCollisionSlideStrength: 1
@@ -796,8 +827,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 375a694738884ecd87540ecce6a6e839, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aimmingCompo: {fileID: 9160216145515701992}
-  _maxChargingTime: 0.8
+  _maxChargingTime: 0.7
   aimmingSlider: {fileID: 8455320770728469596}
 --- !u!114 &6645386256525175462
 MonoBehaviour:
@@ -811,11 +841,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed1aca24b38a49d9a67df5ba7dddb700, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guideSpeed: 65
-  shortDashForce: 15
-  shotDashUpForce: 5
-  dashForce: 50
-  playerCam: {fileID: 462638789331551261}
+  _normalAttackData: {fileID: 0}
+  _baldoAttackData: {fileID: 0}
+  _normalAttackDamage: 50
+  _baldoAttackDamage: 999
+  _normalAttackDamageWindow: 0.16
+  _baldoDamageDelay: 0.06
+  _baldoEventDuration: 0.34
+  _baldoRange: 6
+  _baldoAngle: 100
+  _baldoOriginHeight: 1.1
+  _enableBaldoAimLock: 1
+  _baldoAimLockRange: 30
+  _baldoAimLockAngle: 180
+  _baldoAimLockRangePadding: 1.25
+  _baldoAimLockShakeForce: 0.25
+  _enableBaldoLockedAirDash: 1
+  _enableBaldoFallbackAirDash: 1
+  _baldoFallbackAirDashSpeed: 54
+  _baldoFallbackAirDashDuration: 0.16
+  _baldoLockedAirDashSpeed: 96
+  _baldoLockedAirDashDuration: 0.18
+  _baldoLockedAirDashMinDuration: 0.06
+  _baldoLockedAirDashStopDistance: 1.25
+  _baldoAirDashVerticalLift: 0.25
+  _baldoAirDashCapMultiplier: 9.5
+  _baldoAirDashCapDuration: 0.75
+  _baldoAirDashControlScale: 0
+  _baldoAirDashDamageProbeRange: 5.5
+  _baldoAirDashDamageAngle: 115
+  _baldoLockedAirDashHitRadius: 2.2
+  _baldoLockedAirDashOvershootDistance: 1.2
+  _baldoAirDashPostHitCarryTime: 0.04
+  _baldoBloodStacksOnKill: 1
+  _baldoMultiKillBonusStacks: 1
+  _baldoMultiKillThreshold: 2
+  _baldoKillShakeForce: 0.55
+  _baldoMultiKillShakeForce: 0.85
+  _baldoKillHitStopDuration: 0.045
+  _baldoMultiKillHitStopDuration: 0.075
+  _baldoHitStopTimeScale: 0
   BaldoStartEvent:
     m_PersistentCalls:
       m_Calls:
@@ -855,7 +920,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5997120367025449195}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f15f07bac7a24dd4b537bed35eb179ce, type: 3}
+  m_Script: {fileID: 11500000, guid: ae45a4a91a1a4ccf9c744d6b7f7efea1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   inputReader: {fileID: 11400000, guid: 17079c3371744585a365fda019bd0ee3, type: 2}
@@ -1325,5 +1390,6 @@ MonoBehaviour:
   uiRGBColor: {r: 1, g: 0, b: 0, a: 1}
   <aimingObject>k__BackingField: {fileID: 0}
   _aimUI: {fileID: 4386585095170259121}
+  _targetMemoryTime: 0.45
   sphereRadius: 1.5
   maxDistance: 100
