@@ -346,6 +346,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ca2427cbfd24ca44b242a6d61d779d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnHitEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeathEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &510000005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -362,21 +368,21 @@ MonoBehaviour:
   _groundAcceleration: 110
   _groundFriction: 5.5
   _groundStopSpeed: 1
-  _bhopSpeedMultiplier: 1.65
+  _bhopSpeedMultiplier: 2.5
   _timedJumpHorizontalRetention: 1
-  _autoJumpHorizontalRetention: 0.88
+  _autoJumpHorizontalRetention: 0.92
   _landingFrictionSkipFrames: 0
   _autoBhopWhenJumpHeld: 1
   _skipFrictionOnBufferedJump: 1
-  _airAcceleration: 58
-  _airControlResponsiveness: 6
+  _airAcceleration: 72
+  _airControlResponsiveness: 7
   _airWishSpeedMultiplier: 1
-  _forwardAirAccelerationScale: 0.7
-  _strafeAirAccelerationScale: 0.95
+  _forwardAirAccelerationScale: 0.45
+  _strafeAirAccelerationScale: 1.15
   _minimumSpeedForStrafeScaling: 7
-  _smallSteerBonusAngle: 10
-  _fullStrafeBonusAngle: 38
-  _lateralInputStrafeInfluence: 0.45
+  _smallSteerBonusAngle: 6
+  _fullStrafeBonusAngle: 28
+  _lateralInputStrafeInfluence: 0.75
   _jumpHeight: 2.35
   _gravity: 32
   _jumpBufferTime: 0.16
@@ -400,8 +406,6 @@ MonoBehaviour:
   _wallKickCoyoteTime: 0.22
   _wallKickDetachCooldown: 0.55
   _sameWallReattachCooldown: 0.75
-  _sameWallReattachMinDistance: 2.25
-  _sameWallReattachApproachSpeed: 0.8
   _wallKickReturnControlDampingTime: 0.4
   _wallKickReturnControlScale: 0
   _wallRideAwaySpeedThreshold: 0.25
@@ -413,10 +417,10 @@ MonoBehaviour:
   _wallRideAcceleration: 42
   _wallRideMaxSpeed: 13
   _wallKickMinimumRideTime: 0.08
-  _wallKickHorizontalImpulse: 18
+  _wallKickHorizontalImpulse: 22
   _wallKickForwardImpulse: 10
   _wallKickForwardRetention: 0.75
-  _wallKickVerticalVelocity: 23.5
+  _wallKickVerticalVelocity: 17
   _wallKickMinimumExitSpeed: 24
   _wallKickViewAssist: 0.25
   _wallKickSpeedCapMultiplier: 3.6
@@ -425,16 +429,6 @@ MonoBehaviour:
   _maxAirWallKicks: 0
   _requireNewWallForRepeatKick: 0
   _sameWallNormalDotThreshold: 0.85
-  _enableSlide: 1
-  _slideDuration: 0.55
-  _slideCooldown: 0.25
-  _slideMinStartSpeed: 7
-  _slideStartBoost: 3
-  _slideFriction: 1.25
-  _slideSpeedCapMultiplier: 1.85
-  _slideMomentumCapDuration: 0.25
-  _slideSteerResponsiveness: 3.5
-  _slideInputControl: 0.35
   _useLowFrictionColliderMaterial: 1
   _lateralContactMaxNormalY: 0.35
   _lateralCollisionSlideStrength: 1
@@ -457,6 +451,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 375a694738884ecd87540ecce6a6e839, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  aimmingCompo: {fileID: 0}
   _maxChargingTime: 3
 --- !u!114 &510000007
 MonoBehaviour:
@@ -470,6 +465,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed1aca24b38a49d9a67df5ba7dddb700, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  guideSpeed: 10
+  shortDashForce: 4
+  dashForce: 15
 --- !u!114 &510000008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -649,8 +647,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: 16
     y: 16
-    width: 560
-    height: 470
+    width: 500
+    height: 360
 --- !u!114 &510000903
 MonoBehaviour:
   m_ObjectHideFlags: 0

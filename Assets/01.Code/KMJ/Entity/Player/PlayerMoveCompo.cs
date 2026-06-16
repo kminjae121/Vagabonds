@@ -71,6 +71,8 @@ namespace _Code.EntityCompo.Move
         [SerializeField] private float _wallKickCoyoteTime = 0.22f;
         [SerializeField] private float _wallKickDetachCooldown = 0.55f;
         [SerializeField] private float _sameWallReattachCooldown = 0.75f;
+        [SerializeField] private float _sameWallReattachMinDistance = 2.25f;
+        [SerializeField] private float _sameWallReattachApproachSpeed = 0.8f;
         [SerializeField] private float _wallKickReturnControlDampingTime = 0.4f;
         [SerializeField, Range(0f, 1f)] private float _wallKickReturnControlScale = 0f;
         [SerializeField] private float _wallRideAwaySpeedThreshold = 0.25f;
@@ -95,7 +97,19 @@ namespace _Code.EntityCompo.Move
         [SerializeField] private bool _requireNewWallForRepeatKick = false;
         [SerializeField, Range(0f, 1f)] private float _sameWallNormalDotThreshold = 0.85f;
 
-        [Header("8. Collision Smoothing")]
+        [Header("8. Slide")]
+        [SerializeField] private bool _enableSlide = true;
+        [SerializeField] private float _slideDuration = 0.55f;
+        [SerializeField] private float _slideCooldown = 0.25f;
+        [SerializeField] private float _slideMinStartSpeed = 7f;
+        [SerializeField] private float _slideStartBoost = 3f;
+        [SerializeField] private float _slideFriction = 1.25f;
+        [SerializeField] private float _slideSpeedCapMultiplier = 1.85f;
+        [SerializeField] private float _slideMomentumCapDuration = 0.25f;
+        [SerializeField] private float _slideSteerResponsiveness = 3.5f;
+        [SerializeField, Range(0f, 1f)] private float _slideInputControl = 0.35f;
+
+        [Header("9. Collision Smoothing")]
         [SerializeField] private bool _useLowFrictionColliderMaterial = true;
         [SerializeField, Range(0f, 1f)] private float _lateralContactMaxNormalY = 0.35f;
         [SerializeField, Range(0f, 1f)] private float _lateralCollisionSlideStrength = 1f;
@@ -123,12 +137,17 @@ namespace _Code.EntityCompo.Move
         private Vector3 _wallNormal;
         private Vector3 _wallForward;
         private Vector3 _lastWallKickNormal;
+        private Vector3 _lastWallKickPosition;
+        private Vector3 _slideDirection;
         private float _lastWallContactTime = -999f;
         private float _lastWallKickTime = -999f;
         private float _wallRideStartTime = -999f;
         private float _wallKickMomentumCapUntilTime = -999f;
         private float _wallKickCooldownUntil = -999f;
         private float _sameWallReattachLockedUntilTime = -999f;
+        private float _slideEndTime = -999f;
+        private float _nextSlideTime = -999f;
+        private float _slideMomentumCapUntilTime = -999f;
         private readonly Vector3[] _lateralContactNormals = new Vector3[MaxLateralContactNormals];
         private PhysicsMaterial _lowFrictionMaterial;
         private float _lastLateralContactTime = -999f;
@@ -137,11 +156,14 @@ namespace _Code.EntityCompo.Move
         private int _timedHopCount;
         private int _autoRepeatHopCount;
         private int _wallRideEnterCount;
+        private int _slideCount;
         private bool _isGrounded;
         private bool _wasGrounded;
         private bool _isTouchingWall;
         private bool _isWallRiding;
         private bool _jumpHeld;
+        private bool _slideHeld;
+        private bool _slideRequested;
 
         public bool IsGrounded => _isGrounded;
         public Vector3 Velocity => _rbCompo != null ? _rbCompo.linearVelocity : Vector3.zero;
@@ -155,16 +177,20 @@ namespace _Code.EntityCompo.Move
         public Vector2 MoveInput => _moveInput;
         public bool IsTouchingWall => _isTouchingWall;
         public bool IsWallRiding => _isWallRiding;
+        public bool IsSliding => IsSlideActive();
         public bool IsWallKickReady => _isWallRiding && CanUseWallKickCount();
         public float WallKickGraceRemainingTime => Mathf.Max(0f, _wallKickCoyoteTime - (Time.time - _lastWallContactTime));
         public float WallKickFeedbackRemainingTime => Mathf.Max(0f, _wallKickFeedbackTime - (Time.time - _lastWallKickTime));
         public float WallKickReturnDampingRemainingTime => ShouldDampenWallKickReturnControl()
             ? Mathf.Max(0f, _wallKickReturnControlDampingTime - (Time.time - _lastWallKickTime))
             : 0f;
+        public float SameWallReattachDistanceRemaining => GetSameWallReattachDistanceRemaining();
+        public float SlideRemainingTime => IsSlideActive() ? Mathf.Max(0f, _slideEndTime - Time.time) : 0f;
         public int AirWallKickCount => _airWallKickCount;
         public int TimedHopCount => _timedHopCount;
         public int AutoRepeatHopCount => _autoRepeatHopCount;
         public int WallRideEnterCount => _wallRideEnterCount;
+        public int SlideCount => _slideCount;
         public Vector3 WallNormal => _wallNormal;
         public float CurrentHorizontalSpeed
         {
@@ -234,6 +260,8 @@ namespace _Code.EntityCompo.Move
             _wallKickCoyoteTime = Mathf.Max(0f, _wallKickCoyoteTime);
             _wallKickDetachCooldown = Mathf.Max(0f, _wallKickDetachCooldown);
             _sameWallReattachCooldown = Mathf.Max(0f, _sameWallReattachCooldown);
+            _sameWallReattachMinDistance = Mathf.Max(0f, _sameWallReattachMinDistance);
+            _sameWallReattachApproachSpeed = Mathf.Max(0f, _sameWallReattachApproachSpeed);
             _wallKickReturnControlDampingTime = Mathf.Max(0f, _wallKickReturnControlDampingTime);
             _wallKickReturnControlScale = Mathf.Clamp01(_wallKickReturnControlScale);
             _wallRideAwaySpeedThreshold = Mathf.Max(0f, _wallRideAwaySpeedThreshold);
@@ -255,6 +283,15 @@ namespace _Code.EntityCompo.Move
             _wallKickMomentumCapDuration = Mathf.Max(0f, _wallKickMomentumCapDuration);
             _wallKickFeedbackTime = Mathf.Max(0f, _wallKickFeedbackTime);
             _maxAirWallKicks = Mathf.Max(0, _maxAirWallKicks);
+            _slideDuration = Mathf.Max(0f, _slideDuration);
+            _slideCooldown = Mathf.Max(0f, _slideCooldown);
+            _slideMinStartSpeed = Mathf.Max(0f, _slideMinStartSpeed);
+            _slideStartBoost = Mathf.Max(0f, _slideStartBoost);
+            _slideFriction = Mathf.Max(0f, _slideFriction);
+            _slideSpeedCapMultiplier = Mathf.Max(_bhopSpeedMultiplier, _slideSpeedCapMultiplier);
+            _slideMomentumCapDuration = Mathf.Max(0f, _slideMomentumCapDuration);
+            _slideSteerResponsiveness = Mathf.Max(0f, _slideSteerResponsiveness);
+            _slideInputControl = Mathf.Clamp01(_slideInputControl);
             _lateralContactMaxNormalY = Mathf.Clamp01(_lateralContactMaxNormalY);
             _lateralCollisionSlideStrength = Mathf.Clamp01(_lateralCollisionSlideStrength);
             _lateralCollisionSlideGraceTime = Mathf.Max(0f, _lateralCollisionSlideGraceTime);
@@ -276,6 +313,14 @@ namespace _Code.EntityCompo.Move
         public void Jump()
         {
             RequestJump(HopMode.Timed);
+        }
+
+        public void SetSlideHeld(bool isHeld)
+        {
+            _slideHeld = isHeld;
+
+            if (isHeld)
+                _slideRequested = true;
         }
 
         public float GetMoveSpeed() => EffectiveMaxSpeed;
@@ -315,9 +360,14 @@ namespace _Code.EntityCompo.Move
             _timedHopCount = 0;
             _autoRepeatHopCount = 0;
             _wallRideEnterCount = 0;
+            _slideCount = 0;
             _airWallKickCount = 0;
             _lastWallKickTime = -999f;
             _lastWallKickNormal = Vector3.zero;
+            _lastWallKickPosition = Vector3.zero;
+            _slideEndTime = -999f;
+            _nextSlideTime = -999f;
+            _slideMomentumCapUntilTime = -999f;
         }
 
         public void ApplyKillImpulse(Vector3 direction, int killCount = 1)
@@ -378,14 +428,26 @@ namespace _Code.EntityCompo.Move
 
             Vector3 wishDirection = DampenWallKickReturnControl(GetWishDirection(), out float wishControlScale);
             float wishSpeed = EffectiveMaxSpeed;
+            ConsumeSlideRequest(ref horizontalVelocity, wishDirection);
             UpdateWallContactState(horizontalVelocity);
 
             if (_isGrounded)
             {
-                if (ShouldApplyGroundFriction())
+                if (IsSlideActive())
+                {
+                    horizontalVelocity = ApplySlideMovement(horizontalVelocity, wishDirection, deltaTime);
+                }
+                else if (ShouldApplyGroundFriction())
+                {
                     horizontalVelocity = ApplyFriction(horizontalVelocity, deltaTime);
 
-                horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed, _groundAcceleration, deltaTime);
+                    horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed, _groundAcceleration, deltaTime);
+                }
+                else
+                {
+                    horizontalVelocity = Accelerate(horizontalVelocity, wishDirection, wishSpeed, _groundAcceleration, deltaTime);
+                }
+
                 verticalVelocity = Mathf.Min(verticalVelocity, -1f);
             }
             else
@@ -418,6 +480,7 @@ namespace _Code.EntityCompo.Move
                 _lastGroundedTime = -999f;
                 _ignoreGroundUntilTime = Time.time + _jumpGroundingLockoutTime;
                 _isGrounded = false;
+                _slideEndTime = -999f;
                 _frictionSkipFrames = _landingFrictionSkipFrames;
                 _pendingHopMode = HopMode.None;
                 UpdateWallContactState(horizontalVelocity);
@@ -449,6 +512,76 @@ namespace _Code.EntityCompo.Move
 
             if (hopMode == HopMode.AutoRepeat)
                 _autoRepeatHopCount++;
+        }
+
+        private void ConsumeSlideRequest(ref Vector3 horizontalVelocity, Vector3 wishDirection)
+        {
+            if (!_slideRequested)
+                return;
+
+            _slideRequested = false;
+            if (!CanStartSlide(horizontalVelocity, wishDirection))
+                return;
+
+            StartSlide(ref horizontalVelocity, wishDirection);
+        }
+
+        private bool CanStartSlide(Vector3 horizontalVelocity, Vector3 wishDirection)
+        {
+            return _enableSlide
+                   && _isGrounded
+                   && Time.time >= _nextSlideTime
+                   && !IsSlideActive()
+                   && (horizontalVelocity.sqrMagnitude > 0.25f || wishDirection.sqrMagnitude > Mathf.Epsilon);
+        }
+
+        private void StartSlide(ref Vector3 horizontalVelocity, Vector3 wishDirection)
+        {
+            _slideDirection = GetSlideStartDirection(horizontalVelocity, wishDirection);
+
+            float startSpeed = Mathf.Max(horizontalVelocity.magnitude + _slideStartBoost, _slideMinStartSpeed);
+            float slideCap = EffectiveMaxSpeed * _slideSpeedCapMultiplier;
+            horizontalVelocity = ClampHorizontalSpeed(_slideDirection * startSpeed, slideCap);
+
+            _slideEndTime = Time.time + _slideDuration;
+            _nextSlideTime = Time.time + _slideDuration + _slideCooldown;
+            _slideMomentumCapUntilTime = Time.time + _slideDuration + _slideMomentumCapDuration;
+            _slideCount++;
+            _frictionSkipFrames = 0;
+        }
+
+        private Vector3 ApplySlideMovement(Vector3 horizontalVelocity, Vector3 wishDirection, float deltaTime)
+        {
+            if (!IsSlideActive())
+                return horizontalVelocity;
+
+            if (wishDirection.sqrMagnitude > Mathf.Epsilon && _slideInputControl > 0f)
+            {
+                float steer = (1f - Mathf.Exp(-_slideSteerResponsiveness * deltaTime)) * _slideInputControl;
+                _slideDirection = Vector3.Slerp(_slideDirection, wishDirection, steer).normalized;
+
+                float speed = horizontalVelocity.magnitude;
+                if (speed > Mathf.Epsilon)
+                    horizontalVelocity = Vector3.Slerp(horizontalVelocity.normalized, _slideDirection, steer).normalized * speed;
+            }
+
+            return MovementMotor.ApplyFriction(horizontalVelocity, 0f, _slideFriction, deltaTime);
+        }
+
+        private Vector3 GetSlideStartDirection(Vector3 horizontalVelocity, Vector3 wishDirection)
+        {
+            if (horizontalVelocity.sqrMagnitude > 0.25f)
+                return horizontalVelocity.normalized;
+
+            if (wishDirection.sqrMagnitude > Mathf.Epsilon)
+                return wishDirection.normalized;
+
+            return _entity.transform.forward;
+        }
+
+        private bool IsSlideActive()
+        {
+            return _enableSlide && _isGrounded && Time.time < _slideEndTime;
         }
 
         private Vector3 GetWishDirection()
@@ -640,15 +773,44 @@ namespace _Code.EntityCompo.Move
         {
             Vector3 normalizedWallNormal = wallNormal.normalized;
 
-            if (Time.time < _sameWallReattachLockedUntilTime
-                && _lastWallKickNormal.sqrMagnitude > Mathf.Epsilon
-                && Vector3.Dot(normalizedWallNormal, _lastWallKickNormal.normalized) >= _sameWallNormalDotThreshold)
+            if (IsSameAsLastKickedWall(normalizedWallNormal))
             {
-                return false;
+                if (Time.time < _sameWallReattachLockedUntilTime)
+                    return false;
+
+                if (GetLastWallKickOutwardDistance() < _sameWallReattachMinDistance)
+                    return false;
+
+                float approachSpeed = Vector3.Dot(horizontalVelocity, -normalizedWallNormal);
+                if (_sameWallReattachApproachSpeed > 0f && approachSpeed < _sameWallReattachApproachSpeed)
+                    return false;
             }
 
             float awaySpeed = Vector3.Dot(horizontalVelocity, normalizedWallNormal);
             return awaySpeed <= _wallRideAwaySpeedThreshold;
+        }
+
+        private bool IsSameAsLastKickedWall(Vector3 normalizedWallNormal)
+        {
+            return _lastWallKickNormal.sqrMagnitude > Mathf.Epsilon
+                   && Vector3.Dot(normalizedWallNormal, _lastWallKickNormal.normalized) >= _sameWallNormalDotThreshold;
+        }
+
+        private float GetLastWallKickOutwardDistance()
+        {
+            if (_lastWallKickNormal.sqrMagnitude <= Mathf.Epsilon)
+                return float.MaxValue;
+
+            Vector3 fromKick = _entity.transform.position - _lastWallKickPosition;
+            return Mathf.Max(0f, Vector3.Dot(fromKick, _lastWallKickNormal.normalized));
+        }
+
+        private float GetSameWallReattachDistanceRemaining()
+        {
+            if (_lastWallKickNormal.sqrMagnitude <= Mathf.Epsilon)
+                return 0f;
+
+            return Mathf.Max(0f, _sameWallReattachMinDistance - GetLastWallKickOutwardDistance());
         }
 
         private Vector3 GetWallForward(Vector3 wallNormal, Vector3 wishDirection)
@@ -720,6 +882,7 @@ namespace _Code.EntityCompo.Move
             verticalVelocity = Mathf.Max(verticalVelocity, _wallKickVerticalVelocity);
 
             _lastWallKickNormal = wallNormal;
+            _lastWallKickPosition = _entity.transform.position;
             _lastWallKickTime = Time.time;
             _wallKickMomentumCapUntilTime = Mathf.Max(_wallKickMomentumCapUntilTime, Time.time + _wallKickMomentumCapDuration);
             _sameWallReattachLockedUntilTime = Mathf.Max(_sameWallReattachLockedUntilTime, Time.time + _sameWallReattachCooldown);
@@ -943,6 +1106,8 @@ namespace _Code.EntityCompo.Move
                 _combatMomentumCapUntilTime,
                 _wallKickSpeedCapMultiplier,
                 _wallKickMomentumCapUntilTime,
+                _slideSpeedCapMultiplier,
+                _slideMomentumCapUntilTime,
                 Time.time);
         }
 

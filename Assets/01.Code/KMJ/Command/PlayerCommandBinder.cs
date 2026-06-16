@@ -33,6 +33,7 @@ namespace _Code.Command
 
             inputReader.MoveEvent += _moveCommand.Execute;
             inputReader.JumpKeyEvent += _jumpCommand.Execute;
+            inputReader.SlidingEvent += movement.SetSlideHeld;
             inputReader.ChargingEvent += _attackCommand.Execute;
             inputReader.ChargingAttackEvent += _attackCommand.ExecuteEnd;
         }
@@ -50,6 +51,7 @@ namespace _Code.Command
 
             inputReader.MoveEvent -= _moveCommand.Execute;
             inputReader.JumpKeyEvent -= _jumpCommand.Execute;
+            inputReader.SlidingEvent -= movement.SetSlideHeld;
             inputReader.ChargingEvent -= _attackCommand.Execute;
             inputReader.ChargingAttackEvent -= _attackCommand.ExecuteEnd;
         }

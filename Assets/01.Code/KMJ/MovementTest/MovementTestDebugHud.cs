@@ -9,7 +9,7 @@ namespace _Code.MovementTest
         [SerializeField] private PlayerMoveCompo _movement;
         [SerializeField] private MovementTestCourseController _course;
         [SerializeField] private bool _enableDebugShortcuts = true;
-        [SerializeField] private Rect _rect = new(16f, 16f, 540f, 420f);
+        [SerializeField] private Rect _rect = new(16f, 16f, 560f, 470f);
 
         private GUIStyle _style;
 
@@ -80,10 +80,12 @@ namespace _Code.MovementTest
                    $"Combat Boost: {_movement.CombatMomentumRemainingTime:0.00}s\n" +
                    $"Wall Ride: {(_movement.IsWallRiding ? "On" : "--")} / Enter: {_movement.WallRideEnterCount} / Kick: {GetWallKickText()} / Count: {_movement.AirWallKickCount}\n" +
                    $"Wall Return Damping: {_movement.WallKickReturnDampingRemainingTime:0.00}s\n" +
+                   $"Same Wall Dist Lock: {_movement.SameWallReattachDistanceRemaining:0.00}m\n" +
+                   $"Slide: {(_movement.IsSliding ? "On" : "--")} / Left: {_movement.SlideRemainingTime:0.00}s / Count: {_movement.SlideCount}\n" +
                    $"Last Hop: {_movement.LastConsumedHopMode} / Timed: {_movement.TimedHopCount} / Auto: {_movement.AutoRepeatHopCount}\n" +
                    $"Grounded: {_movement.IsGrounded}\n" +
                    $"Mouse: look / WASD: move\n" +
-                   $"Space tap: timed or wall kick / hold: auto\n" +
+                   $"Space tap: timed or wall kick / hold: auto / Ctrl: slide\n" +
                    $"K: impulse / B: blood +1 / N: clear\n" +
                    $"R: reset course / Esc: cursor";
         }

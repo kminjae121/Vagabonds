@@ -30,6 +30,8 @@ namespace _Code.EntityCompo.Move
             float combatMomentumCapUntilTime,
             float wallKickSpeedCapMultiplier,
             float wallKickMomentumCapUntilTime,
+            float slideSpeedCapMultiplier,
+            float slideMomentumCapUntilTime,
             float currentTime)
         {
             float capMultiplier = bhopSpeedMultiplier;
@@ -37,6 +39,8 @@ namespace _Code.EntityCompo.Move
                 capMultiplier = Mathf.Max(capMultiplier, combatMomentumCapMultiplier);
             if (currentTime < wallKickMomentumCapUntilTime)
                 capMultiplier = Mathf.Max(capMultiplier, wallKickSpeedCapMultiplier);
+            if (currentTime < slideMomentumCapUntilTime)
+                capMultiplier = Mathf.Max(capMultiplier, slideSpeedCapMultiplier);
 
             return effectiveBaseSpeed * capMultiplier;
         }
