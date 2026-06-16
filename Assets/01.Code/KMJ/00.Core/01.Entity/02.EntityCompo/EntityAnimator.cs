@@ -49,6 +49,21 @@ namespace _01.Member.KMJ._00.Core._01.Entity._02.EntityCompo
                 }
             }
         }
+        
+        private void ResetAllTriggers()
+        {
+            if (animator == null) return;
+
+            foreach (var param in animator.parameters)
+                if (param.type == AnimatorControllerParameterType.Bool)
+                    animator.SetBool(param.nameHash, false);
+        }
+
+        public void SetBoolean(string paramName)
+        {
+            ResetAllTriggers();
+            animator.SetBool(paramName, true);
+        }
 
         public void SetParam(int hash, float value) => animator.SetFloat(hash, value);
         public void SetParam(int hash, bool value) => animator.SetBool(hash, value);

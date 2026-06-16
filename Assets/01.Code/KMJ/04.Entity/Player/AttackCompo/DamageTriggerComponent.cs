@@ -1,8 +1,10 @@
 ﻿using System;
 using _01.Member.KMJ._00.Core._01.Entity._02.EntityCompo;
 using _Code.EntityCompo;
+using Code.Core.Events.Bus;
 using Code.Core.Stats;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace _01.Member.KMJ._02.Scripts._01.Player.AttackCompo
 {
@@ -17,20 +19,15 @@ namespace _01.Member.KMJ._02.Scripts._01.Player.AttackCompo
         [SerializeField] private AttackDataSO weaponAtkData;
             
         [Header("Stat")]
-        [SerializeField] private  StatSO atkDamageStat;
-
+        [SerializeField] private StatSO atkDamageStat;
         [SerializeField] private EntityStatCompo statCompo;
-            
-        private float _atkDamage;
-
-        private Entity _owner;
-
+        
         private DamageData damageData = new();
-
+        private Entity _owner;
         private Collider _thisCollider;
-
         private GameObject _target;
         
+        private float _atkDamage;
         public void Initialize(Entity entity)
         {
             _owner = entity;
@@ -68,6 +65,7 @@ namespace _01.Member.KMJ._02.Scripts._01.Player.AttackCompo
             
             if (_target.TryGetComponent(out IDamageable damageable))                 
             {
+                Bus<CamShakeEvent>.Raise(new CamShakeEvent(0.3f));
                 damageable.ApplyDamage(damageData, _target.transform.position, _owner.transform.forward, weaponAtkData,
                     _owner);
             }

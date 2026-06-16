@@ -1,3 +1,4 @@
+using _01.Member.KMJ._00.Core._01.Entity._02.EntityCompo;
 using _Code.EntityCompo;
 using DG.Tweening;
 using UnityEngine;
@@ -10,12 +11,14 @@ namespace _Code.EntityCompo.Combat
         [SerializeField] private PlayerAutoAimmingCompo aimmingCompo;
         [SerializeField] private float _maxChargingTime = 1f;
         [SerializeField] private Image aimmingSlider;
+        private EntityAnimator _animator;
 
         private bool _isCharging;
         private float _chargingSec;
 
         public void Initialize(Entity entity)
         {
+            _animator = entity.GetUnitCompo<EntityAnimator>();
         }
 
         private void Update()
@@ -37,12 +40,13 @@ namespace _Code.EntityCompo.Combat
         {
             _chargingSec = 0f;
             _isCharging = true;
+            _animator.SetBoolean("NABDO");
         }
 
         public bool EndCharging()
         {
             _isCharging = false;
-
+            _animator.SetBoolean("IDLE");
             return _chargingSec >= _maxChargingTime;
         }
 
