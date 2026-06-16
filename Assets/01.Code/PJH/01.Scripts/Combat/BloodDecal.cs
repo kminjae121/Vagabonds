@@ -1,13 +1,13 @@
 ﻿using System;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using UnityEngine;
 
 namespace Code.Combat
 {
     public class BloodDecal : MonoBehaviour, IPoolable
     {
-        [field: SerializeField] public PoolItemSO PoolItem { get; private set; }
-        
+        [field: SerializeField] public PoolingItemSO PoolingType { get; private set; }
+
         public GameObject GameObject => gameObject;
 
         private Pool _myPool;

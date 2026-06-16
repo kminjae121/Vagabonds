@@ -1,6 +1,6 @@
 ﻿using _Code.EntityCompo;
 using Code.Entities;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using Unity.Behavior;
 using UnityEngine;
 
@@ -9,9 +9,9 @@ namespace Code.Enemies
     public abstract class Enemy : Entity, IPoolable
     {
         [field: SerializeField] public EntityFinderSO PlayerFinder { get; private set; }
-        [field: SerializeField] public PoolItemSO PoolItem { get; private set; }
+        [field: SerializeField] public PoolingItemSO PoolingType { get; private set; }
 
-        public BehaviorGraphAgent BTAgent { get; private set; }
+        [field: SerializeField] public BehaviorGraphAgent BTAgent { get; private set; }
         public GameObject GameObject => gameObject;
 
         public float detectRange;
@@ -21,8 +21,6 @@ namespace Code.Enemies
         
         protected virtual void Start()
         {
-            BTAgent = GetComponent<BehaviorGraphAgent>();
-            
             var target = GetBlackboardVariable<Transform>("Target");
 
             if (target == null)

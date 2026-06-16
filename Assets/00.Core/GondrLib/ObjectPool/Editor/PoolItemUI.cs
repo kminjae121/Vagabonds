@@ -1,5 +1,5 @@
 using System;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using UnityEngine.UIElements;
 
 namespace GondrLib.ObjectPool.Editor
@@ -13,37 +13,33 @@ namespace GondrLib.ObjectPool.Editor
         public event Action<PoolItemUI> OnDeleteEvent;
         public event Action<PoolItemUI> OnSelectEvent;
 
-        public string Name
+        public string Name 
         {
-            get=>_nameLabel.text;
-            set=>_nameLabel.text = value;
+            get => _nameLabel.text;
+            set => _nameLabel.text = value;
         }
 
-        public PoolItemSO poolItem;
+        public PoolingItemSO poolItem;
 
         public bool IsActive
         {
             get => _rootElement.ClassListContains("active");
-            set
-            {
-                if (value)
-                    _rootElement.AddToClassList("active");
-                else
-                    _rootElement.RemoveFromClassList("active");
-            }
+            set => _rootElement.EnableInClassList("active", value);
         }
 
-        public PoolItemUI(VisualElement root, PoolItemSO poolItem)
+        public PoolItemUI(VisualElement root, PoolingItemSO item)
         {
-            this.poolItem = poolItem;
+            poolItem = item;
             _rootElement = root.Q<VisualElement>("PoolItem");
             _nameLabel = root.Q<Label>("ItemName");
-            _deleteBtn = _rootElement.Q<Button>("DeleteBtn");
+            _deleteBtn = root.Q<Button>("DeleteBtn");
+            
             _deleteBtn.RegisterCallback<ClickEvent>(evt =>
             {
                 OnDeleteEvent?.Invoke(this);
-                evt.StopPropagation();
+                evt.StopPropagation(); //이벤트 전파를 멈춘다.
             });
+            
             _rootElement.RegisterCallback<ClickEvent>(evt =>
             {
                 OnSelectEvent?.Invoke(this);

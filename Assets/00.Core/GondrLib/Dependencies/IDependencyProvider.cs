@@ -1,4 +1,4 @@
 namespace GondrLib.Dependencies
 {
-    public interface IDependencyProvider{ }
+    public interface IDependencyProvider { }
 }

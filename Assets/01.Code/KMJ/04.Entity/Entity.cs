@@ -50,7 +50,7 @@ namespace _Code.EntityCompo
             Destroy(gameObject);
         }
         
-        public T GetUnitCompo<T>() where T : class, IEntityComponent
+        public T GetEntityCompo<T>() where T : class, IEntityComponent
         {
             return _components.GetValueOrDefault(typeof(T)) as T;
         }

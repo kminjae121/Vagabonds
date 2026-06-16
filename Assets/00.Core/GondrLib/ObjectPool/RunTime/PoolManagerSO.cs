@@ -1,55 +1,51 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GondrLib.ObjectPool.RunTime
+namespace GondrLib.ObjectPool.Runtime
 {
     [CreateAssetMenu(fileName = "PoolManager", menuName = "SO/Pool/Manager", order = 0)]
     public class PoolManagerSO : ScriptableObject
     {
-        public List<PoolItemSO> itemList = new ();
-
-        private Dictionary<PoolItemSO, Pool> _pools;
+        public List<PoolingItemSO> itemList = new List<PoolingItemSO>();
+        
+        //해당 아이템이 존재하는 풀을 만든다.
+        private Dictionary<PoolingItemSO, Pool> _pools;
         private Transform _rootTrm;
 
-        public void InitializePool(Transform rootTrm)
+        public void Initialize(Transform rootTrm)
         {
             _rootTrm = rootTrm;
-            _pools = new Dictionary<PoolItemSO, Pool>();
+            _pools = new Dictionary<PoolingItemSO, Pool>();
 
             foreach (var item in itemList)
             {
                 IPoolable poolable = item.prefab.GetComponent<IPoolable>();
-                Debug.Assert(poolable != null, $"Pooling item does not have Ipoolable script");
+                Debug.Assert(poolable != default(IPoolable), $"Pooling item {item.prefab.name} has no poolable component" );
+
+                GameObject newParent = new GameObject(poolable.PoolingType.poolingName);
+                newParent.transform.SetParent(_rootTrm);
                 
-                Transform poolParent = new GameObject(item.prefab.name).transform;
-                poolParent.SetParent(_rootTrm);
-                
-                Pool pool = new Pool(poolable, poolParent, item.initCount);
-                _pools.Add(item, pool);
+                Pool pool = new Pool(poolable, newParent.transform, item.initCount);
+                _pools.Add(item, pool); //딕셔너리에 추가한다.
             }
         }
 
-        public IPoolable Pop(PoolItemSO item)
+        public IPoolable Pop(PoolingItemSO findItem)
         {
-            if (_pools.TryGetValue(item, out Pool pool))
+            if (_pools.TryGetValue(findItem, out Pool pool))
             {
                 return pool.Pop();
             }
 
-            return null;
+            return default;
         }
 
         public void Push(IPoolable item)
         {
-            if (_pools.TryGetValue(item.PoolItem, out Pool pool))
+            if (_pools.TryGetValue(item.PoolingType, out Pool pool))
             {
                 pool.Push(item);
             }
-            else
-            {
-                Debug.LogError($"Pooling item {item.PoolItem} does not exist");
-            }
         }
-
     }
 }

@@ -35,10 +35,10 @@ namespace _Code.EntityCompo.Combat
         {
             _entity = entity;
             
-            _damageTriggerCompo = entity.GetUnitCompo<DamageTriggerComponent>();
-            ChargingCompo = entity.GetUnitCompo<PlayerChargingCompo>();
-            animator = entity.GetUnitCompo<EntityAnimator>();
-            _triggerCompo = entity.GetUnitCompo<EntityAnimatorTrigger>();
+            _damageTriggerCompo = entity.GetEntityCompo<DamageTriggerComponent>();
+            ChargingCompo = entity.GetEntityCompo<PlayerChargingCompo>();
+            animator = entity.GetEntityCompo<EntityAnimator>();
+            _triggerCompo = entity.GetEntityCompo<EntityAnimatorTrigger>();
             
             _rbCompo = entity.GetComponent<Rigidbody>();
             _triggerCompo.OnBaldoAnimationEndTrigger += HandleBaldoAniamtionEnd;
@@ -102,17 +102,17 @@ namespace _Code.EntityCompo.Combat
 
                 _rbCompo.linearVelocity = dir * guideSpeed;
 
-                if (Vector3.Distance(_entity.transform.position, target.transform.position) <= 2f && !isUseAnimation)
+                if (Vector3.Distance(_entity.transform.position, target.transform.position) <= 5f && !isUseAnimation)
                 {
+                    BaldoEndEvent?.Invoke();
                     animator.SetBoolean("BALDO");
+                    _damageTriggerCompo.GiveDamageForTarget(target);
                     isUseAnimation = true;
                 }
 
                 yield return null;
             }
 
-            BaldoEndEvent?.Invoke();
-            _damageTriggerCompo.GiveDamageForTarget(target);
             _rbCompo.linearVelocity = Vector3.zero;
             
             _rbCompo.AddForce(

@@ -1,7 +1,7 @@
 ﻿using Code.Combat;
 using Code.Entities.Combat;
 using GondrLib.Dependencies;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using UnityEngine;
 
 namespace Code.Enemies
@@ -10,7 +10,7 @@ namespace Code.Enemies
     {
         [SerializeField] private BowLineRenderer bowLineRenderer;
         [SerializeField] private Transform firePos;
-        [SerializeField] private PoolItemSO arrowPrefab;
+        [SerializeField] private PoolingItemSO arrowPrefab;
         [SerializeField] private GameObject arrowInHand;
         [SerializeField] private float arrowSpeed = 20f;
         [SerializeField] private float arrowDamage = 10f;

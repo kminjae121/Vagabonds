@@ -3,13 +3,13 @@ using Code.Core._02.Sound;
 using Code.Core.GameEvent;
 using GameEvents;
 using GondrLib.Dependencies;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using UnityEngine;
 
  public class SoundManager : MonoBehaviour
     {
         [SerializeField] private GameEventChannelSO soundChannel;
-        [SerializeField] private PoolItemSO soundPlayer;
+        [SerializeField] private PoolingItemSO soundPlayer;
         
         [Inject] private PoolManagerMono _poolManagerMono;
         private SoundPlayer _bgmPlayer;

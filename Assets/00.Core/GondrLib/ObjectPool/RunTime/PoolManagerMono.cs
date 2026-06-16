@@ -1,27 +1,26 @@
-using System;
 using GondrLib.Dependencies;
 using UnityEngine;
 
-namespace GondrLib.ObjectPool.RunTime
+namespace GondrLib.ObjectPool.Runtime
 {
     [Provide]
-    public class PoolManagerMono : MonoBehaviour,IDependencyProvider
+    public class PoolManagerMono : MonoBehaviour
     {
         [SerializeField] private PoolManagerSO poolManager;
 
         private void Awake()
         {
-            poolManager.InitializePool(transform);
+            poolManager.Initialize(transform);
         }
 
-        public T Pop<T>(PoolItemSO item) where T : IPoolable
+        public T Pop<T>(PoolingItemSO item) where T : IPoolable
         {
             return (T)poolManager.Pop(item);
         }
-        
-        public void Push(IPoolable item)
+
+        public void Push(IPoolable target)
         {
-            poolManager.Push(item);
+            poolManager.Push(target);
         }
     }
 }

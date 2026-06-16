@@ -31,8 +31,8 @@ namespace Code.Entities
         public void Initialize(Entity entity)
         {
             _entity = entity;
-            _actionData = entity.GetUnitCompo<ActionData>();
-            _statCompo = entity.GetUnitCompo<EntityStatCompo>();
+            _actionData = entity.GetEntityCompo<ActionData>();
+            _statCompo = entity.GetEntityCompo<EntityStatCompo>();
         }
         
         public void AfterInitialize()

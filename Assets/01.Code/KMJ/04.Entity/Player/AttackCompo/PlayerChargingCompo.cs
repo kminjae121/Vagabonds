@@ -18,7 +18,7 @@ namespace _Code.EntityCompo.Combat
 
         public void Initialize(Entity entity)
         {
-            _animator = entity.GetUnitCompo<EntityAnimator>();
+            _animator = entity.GetEntityCompo<EntityAnimator>();
         }
 
         private void Update()

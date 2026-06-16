@@ -2,14 +2,14 @@
 using _01.Member.KMJ._02.Scripts._01.Player.AttackCompo;
 using _Code.EntityCompo;
 using Code.Entities;
-using GondrLib.ObjectPool.RunTime;
+using GondrLib.ObjectPool.Runtime;
 using UnityEngine;
 
 namespace Code.Entities.Combat
 {
     public class Arrow : MonoBehaviour, IPoolable
     {
-        [field: SerializeField] public PoolItemSO PoolItem { get; private set; }
+        [field: SerializeField] public PoolingItemSO PoolingType { get; private set; }
 
         [SerializeField] private AttackDataSO arrowAttackData;
         

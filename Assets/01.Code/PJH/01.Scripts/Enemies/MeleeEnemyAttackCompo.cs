@@ -22,8 +22,8 @@ namespace Code.Enemies
         public void Initialize(Entity entity)
         {
             _entity = entity;
-            _statCompo = entity.GetUnitCompo<EntityStatCompo>();
-            _trigger = entity.GetUnitCompo<EntityAnimatorTrigger>();
+            _statCompo = entity.GetEntityCompo<EntityStatCompo>();
+            _trigger = entity.GetEntityCompo<EntityAnimatorTrigger>();
 
             casters = entity.GetComponentsInChildren<OverlapDamageCaster>(true);
 

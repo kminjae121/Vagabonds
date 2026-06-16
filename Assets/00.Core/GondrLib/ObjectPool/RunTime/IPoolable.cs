@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace GondrLib.ObjectPool.RunTime
+namespace GondrLib.ObjectPool.Runtime
 {
     public interface IPoolable
     {
-        public PoolItemSO PoolItem { get; }
+        public PoolingItemSO PoolingType { get; }
         public GameObject GameObject { get; }
-        public void SetUpPool(Pool pool); //안해도 된다.
+        public void SetUpPool(Pool pool);
         public void ResetItem();
     }
 }

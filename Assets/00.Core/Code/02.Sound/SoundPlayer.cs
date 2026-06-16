@@ -1,4 +1,4 @@
-﻿using GondrLib.ObjectPool.RunTime;
+﻿using GondrLib.ObjectPool.Runtime;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -10,7 +10,7 @@ namespace Code.Core._02.Sound
         [SerializeField] private AudioMixerGroup musicGroup;
         [SerializeField] private AudioSource audioSource;
         
-        [field: SerializeField] public PoolItemSO PoolItem { get; private set; }
+        [field: SerializeField] public PoolingItemSO PoolingType { get; private set; }
         public GameObject GameObject => gameObject;
         private Pool _myPool;
         public void SetUpPool(Pool pool)

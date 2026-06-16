@@ -45,7 +45,7 @@ namespace Code.Enemies
         public void Initialize(Entity entity)
         {
             _entity = entity;
-            _statCompo = entity.GetUnitCompo<EntityStatCompo>();
+            _statCompo = entity.GetEntityCompo<EntityStatCompo>();
             agent.updateRotation = isUpdateRotation;
         }
 

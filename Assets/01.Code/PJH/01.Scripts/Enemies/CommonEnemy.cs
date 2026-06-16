@@ -17,7 +17,7 @@ namespace Code.Enemies
         protected override void Awake()
         {
             base.Awake();
-            _actionData = GetUnitCompo<ActionData>();
+            _actionData = GetEntityCompo<ActionData>();
         }
 
         protected override void Start()
@@ -25,7 +25,7 @@ namespace Code.Enemies
             base.Start();
 
             _stateChangeChannel = GetBlackboardVariable<StateChangeEvent>("StateChannel").Value;
-            OnDeathEvent.AddListener(MapOpen.Instance.GetOpenCnt);
+            //OnDeathEvent.AddListener(MapOpen.Instance.GetOpenCnt);
         }
 
         public void HandleChildAnimatorMove(Vector3 deltaPosition, Quaternion deltaRotation)

@@ -1,7 +1,9 @@
 using _Code.EntityCompo;
+using GondrLib.Dependencies;
 using UnityEngine;
 
-public class Player : Entity
+[Provide]
+public class Player : Entity, IDependencyProvider
 {
     
 }

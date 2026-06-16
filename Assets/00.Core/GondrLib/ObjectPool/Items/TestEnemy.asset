@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3a4afc4c03a454f9c1df9a315b2b0bb, type: 3}
+  m_Name: TestEnemy
+  m_EditorClassIdentifier: ObjectPoolAssembly::GondrLib.ObjectPool.Runtime.PoolingItemSO
+  poolingName: TestEnemy
+  prefab: {fileID: 9179727188465003722, guid: e4d7d0afa0b94b541ad3fcc02abee1e0, type: 3}
+  initCount: 10
